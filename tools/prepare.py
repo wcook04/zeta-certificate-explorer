@@ -45,13 +45,27 @@ def encl(e):
 
 
 def dec(x, digits, rounding):
-    """Fraction -> decimal string with `digits` significant digits, rounded in one direction."""
+    """Round an exact Fraction directly; no finite-precision division precedes rounding."""
+    if digits < 1 or rounding not in (ROUND_FLOOR, ROUND_CEILING):
+        raise ValueError((digits, rounding))
     if x == 0:
         return "0"
-    d = Decimal(x.numerator) / Decimal(x.denominator)
-    exp = d.adjusted() - digits + 1
-    q = Decimal(1).scaleb(exp)
-    s = format(d.quantize(q, rounding=rounding), "f" if -12 < d.adjusted() < 15 else "e")
+    n, den = abs(x.numerator), x.denominator
+    # Find floor(log10(abs(x))) using integers, including powers of ten exactly.
+    exponent = len(str(n)) - len(str(den))
+    below = n < den * 10 ** exponent if exponent >= 0 else n * 10 ** (-exponent) < den
+    if below:
+        exponent -= 1
+    shift = exponent - digits + 1
+    numerator, denominator = x.numerator, den
+    if shift < 0:
+        numerator *= 10 ** (-shift)
+    else:
+        denominator *= 10 ** shift
+    rounded = numerator // denominator if rounding == ROUND_FLOOR else -((-numerator) // denominator)
+    # The remaining Decimal operation is exact: a small integer times a power of ten.
+    d = Decimal(rounded).scaleb(shift)
+    s = format(d, "f" if -12 < exponent < 15 else "e")
     if "." in s and "e" not in s:
         s = s.rstrip("0").rstrip(".")
     return s
@@ -119,6 +133,7 @@ def catalogue(run):
                     "z": interval_text(cz, rz), "sign": "+" if cz > 0 else "-",
                     "bound": dec(cb + rb, 8, ROUND_CEILING), "boundAt": bound_height(b["subject"]),
                     "margin": dec(margin, 6, ROUND_FLOOR),
+                    "trueZ": interval_text(cz, rz + cb + rb),
                 })
             rows.append({
                 "method": method, "batch": int(batch), "offset": c["offset"], "variant": variant,
@@ -127,6 +142,8 @@ def catalogue(run):
             })
     for i, r in enumerate(rows, 1):
         r["row"] = i
+        # Shorten an already conservative decimal by flooring again, never round-to-nearest.
+        r["marginShort"] = dec(min(Fraction(e["margin"]) for e in r["ends"]), 2, ROUND_FLOOR)
     return rows, checks
 
 

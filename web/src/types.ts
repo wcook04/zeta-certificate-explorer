@@ -9,7 +9,9 @@ export interface EndCheck {
   bound: string;
   /** Height at which the bound was proved (the batch's lowest height for Riemann–Siegel). */
   boundAt: string | null;
-  /** |Z̃| − (its enclosure radius) − (the bound's upper end), rounded down. */
+  /** True Hardy Z: the approximation enclosure widened by the analytic error bound. */
+  trueZ: [string, string];
+  /** |centre of Z̃| − enclosure radius − error-bound upper end, rounded down. */
   margin: string;
 }
 
@@ -23,6 +25,8 @@ export interface Row {
   right: string;
   params: string[];
   ends: [EndCheck, EndCheck];
+  /** Minimum endpoint margin, rounded down again to two significant digits. */
+  marginShort: string;
   detail?: boolean;
 }
 

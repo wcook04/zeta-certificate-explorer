@@ -3,7 +3,7 @@
 **[Open the site](https://wcook04.github.io/zeta-certificate-explorer/)**
 
 Salvatore Mercuri and Bhavik Mehta's [Lean verification of the Riemann hypothesis](https://github.com/smmercuri/zeta)
-proves that every zero of the Riemann zeta function with imaginary part below 10,011 lies on the
+proves that every nontrivial zero of the Riemann zeta function with |Im(s)| < 10,011 lies on the
 critical line. It rests on 10,156 intervals of height, each certified to contain a zero of
 Hardy's Z function, and on Turing's method to show there are no other zeros.
 
@@ -11,14 +11,19 @@ This site lists every one of those intervals. For each it shows, read from the c
 
 - the interval each end's approximation Z̃ is proved to lie in, and its sign;
 - the proved bound on the approximation's error, and the height where that bound was proved;
-- how much |Z̃| clears the bound by;
+- the resulting enclosure for true Z, and its minimum distance from zero;
 - which formula the certificate uses: Euler–Maclaurin below t = 149.5, Riemann–Siegel above it,
   and for 74 intervals Riemann–Siegel with its first correction term C₁.
 
+Each endpoint can also be compared with the certificate for the neighbouring interval that meets
+it. This is useful when two certificates use different approximation formulas at the same height.
+
 For fourteen intervals it also opens the computation Lean checked, as a graph of the quantities
 the certificate encloses. Each card is one quantity and the interval it is proved to lie in; a
-card unfolds into the quantities it is built from. The panel beside it gives the lemma that
-produced the value and the arithmetic the kernel checks at that step.
+card unfolds into the quantities it is built from. The panel gives the lemma that
+produced the value and the arithmetic obligations present at that step. Buttons jump directly to
+the left approximation, right approximation or error bound. The graph describes the successful
+proof dependencies; it does not claim to replay the construction history or measure kernel work.
 
 The verification, its Lean and its data are the authors'. The extraction, this site and its
 plain-language labels were made by Will Cook with AI and have not been reviewed by the authors.
@@ -38,7 +43,10 @@ plain-language labels were made by Will Cook with AI and have not been reviewed 
 3. **Prepare the site's data.** [`tools/prepare.py`](tools/prepare.py) computes every displayed
    number with exact fractions from those integers and rounds outward: an interval is never
    printed narrower, or a margin larger, than the proof shows. It checks that every one of the
-   20,312 endpoint margins is positive.
+   20,312 endpoint margins is positive. It widens the finite approximation enclosure by the proved
+   analytic error to produce the displayed true-Z interval, and prepares the short table margins by
+   rounding down. Directed rounding uses exact integer division; no fixed-precision Decimal division
+   occurs before the rounding decision.
 
    It also simplifies each graph for reading:
    - steps that rename or re-centre the same value are merged into one card;

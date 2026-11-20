@@ -14,7 +14,7 @@ type Filter = "all" | "c1" | "detail" | "em";
 const FILTERS: { id: Filter; label: string; test: (r: Row) => boolean }[] = [
   { id: "all", label: "All", test: () => true },
   { id: "detail", label: "Computation shown", test: (r) => !!r.detail },
-  { id: "c1", label: "Needed the C₁ term", test: (r) => r.variant === "C1" },
+  { id: "c1", label: "Uses C₁", test: (r) => r.variant === "C1" },
   { id: "em", label: "Euler–Maclaurin", test: (r) => r.method === "EM" },
 ];
 
@@ -62,10 +62,9 @@ export function App() {
       <header className="zx-head">
         <h1>Zero certificates up to height 10,011</h1>
         <p className="zx-lede">
-          Salvatore Mercuri and Bhavik Mehta's <a href={REPO}>Lean verification</a> proves that every zero of the Riemann zeta function
-          with imaginary part below 10,011 lies on the critical line. It rests on {rows ? fmt(rows.length) : "10,156"} intervals of height,
-          each certified to contain a zero, and Turing's method to show there are no others. This page lists every interval and, for
-          some, opens the computation Lean checked.
+          Salvatore Mercuri and Bhavik Mehta's <a href={REPO}>Lean verification</a> proves that every nontrivial zero with
+          |Im(s)| &lt; 10,011 lies on the critical line. Explore the {rows ? fmt(rows.length) : "10,156"} certified intervals used in that
+          proof: inspect both endpoint checks, compare a shared endpoint, or open one of the fourteen extracted computations.
         </p>
       </header>
 
@@ -85,7 +84,7 @@ export function App() {
         </section>
 
         <section className="zx-detail" aria-label="The selected interval">
-          {current ? <Detail row={current} /> : <Welcome rows={rows} onChoose={choose} />}
+          {current && rows ? <Detail key={current.row} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} /> : <Welcome rows={rows} onChoose={choose} />}
         </section>
       </main>
 
@@ -109,12 +108,12 @@ function Welcome({ rows, onChoose }: { rows: Row[] | null; onChoose(row: number)
       <p>
         Each certificate shows two things at the ends of its interval: the approximation Z̃ of Hardy's Z function has opposite signs, and at
         each end |Z̃| is larger than the proved bound on the approximation's error. So Z itself changes sign, and ζ(½ + it) has a zero in
-        between.
+        between. A certificate proves existence inside its bracket; Turing's method supplies the global count.
       </p>
       {rows && (
         <ul className="zx-starts">
           <li><button type="button" onClick={() => onChoose(53)}>The first Riemann–Siegel interval, 149.500 to 150.503</button></li>
-          <li><button type="button" onClick={() => onChoose(6710)}>An interval that needed the C₁ correction term, near 7005</button></li>
+          <li><button type="button" onClick={() => onChoose(6710)}>Compare the shared endpoint of two C₁ certificates near 7005</button></li>
           <li><button type="button" onClick={() => onChoose(1)}>The first interval, 1.000 to 17.846, by Euler–Maclaurin</button></li>
         </ul>
       )}
@@ -146,15 +145,14 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
   return (
     <div className="zx-grid" role="table" aria-rowcount={rows.length}>
       <div className="zx-tr zx-th" role="row">
-        <span role="columnheader">Zero</span>
+        <span role="columnheader">No.</span>
         <span role="columnheader">Interval of height t</span>
         <span role="columnheader">Formula</span>
-        <span role="columnheader" title="How far |Z̃| clears the error bound, at the closer end">Margin</span>
+        <span role="columnheader" title="Lower bound on the smaller endpoint margin, rounded down">Margin ≥</span>
       </div>
       <div className="zx-scroll" ref={box} onScroll={(e) => setTop(e.currentTarget.scrollTop)}>
         <div style={{ height: rows.length * ROW_H, position: "relative" }}>
           {rows.slice(first, last).map((r, k) => {
-            const m = Math.min(Number(r.ends[0].margin), Number(r.ends[1].margin));
             return (
               <button
                 key={r.row}
@@ -169,7 +167,7 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
                 <span className="zx-t">{r.left} – {r.right}</span>
                 <span>{VARIANT_WORDS[r.variant]}</span>
                 <span className="zx-num">
-                  {m.toPrecision(2)}
+                  {r.marginShort ?? minDecimal(r.ends[0].margin, r.ends[1].margin)}
                   {r.detail && <span className="zx-dot" title="The computation is shown" aria-label="computation shown" />}
                 </span>
               </button>
@@ -181,15 +179,24 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
   );
 }
 
-function Detail({ row }: { row: Row }) {
+function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; next?: Row; onChoose(row: number): void }) {
   const [tree, setTree] = useState<CertTree | null>(null);
   const [card, setCard] = useState<string | null>(null);
+  const [treeError, setTreeError] = useState<string | null>(null);
+  const [focus, setFocus] = useState<string | null>(null);
+  const [comparison, setComparison] = useState<0 | 1 | null>(null);
+  const neighbours = [previous?.right === row.left ? previous : undefined, next?.left === row.right ? next : undefined] as const;
   useEffect(() => {
     setTree(null);
     setCard(null);
+    setFocus(null);
+    setTreeError(null);
     if (!row.detail) return;
     let live = true;
-    fetch(`${DATA}/trees/${row.row}.json`).then((r) => r.json()).then((t) => live && setTree(t as CertTree));
+    fetch(`${DATA}/trees/${row.row}.json`)
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((t) => live && setTree(t as CertTree))
+      .catch((e) => live && setTreeError(String(e)));
     return () => {
       live = false;
     };
@@ -203,35 +210,56 @@ function Detail({ row }: { row: Row }) {
     if (!graph) return;
     const t = window.setTimeout(() => view.current?.fitAll(false), 120);
     return () => window.clearTimeout(t);
-  }, [graph]);
+  }, [graph, focus]);
+  const jumpCards = tree ? [
+    { label: "Left approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the left end") },
+    { label: "Right approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the right end") },
+    { label: "Error bound", card: tree.nodes.find((n) => n.value && n.label.startsWith("error bound")) },
+  ].filter((x) => !!x.card) : [];
 
   return (
     <div className="zx-cert">
-      <h2>
-        Zero {fmt(row.row)}: between t = {row.left} and t = {row.right}
-      </h2>
-      <Ends row={row} />
+      <div className="zx-row-nav">
+        <span>Interval {fmt(row.row)} · {VARIANT_WORDS[row.variant]}</span>
+        <nav aria-label="Neighbouring intervals">
+          {previous && <button type="button" onClick={() => onChoose(previous.row)}>← Previous</button>}
+          {next && <button type="button" onClick={() => onChoose(next.row)}>Next →</button>}
+        </nav>
+      </div>
+      <h2>A zero between t = {row.left} and t = {row.right}</h2>
+      <p className="zx-conclusion">
+        Z is {row.ends[0].sign === "+" ? "positive" : "negative"} at the left endpoint and {row.ends[1].sign === "+" ? "positive" : "negative"} at the right,
+        even after allowing for both numerical enclosure width and approximation error. Continuity gives a zero inside the interval.
+      </p>
+      <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
+      {comparison !== null && neighbours[comparison] && (
+        <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
+      )}
       <Variant row={row} />
       {row.detail ? (
         graph && tree ? (
           <div className="zx-work">
             <div className="zx-map">
               <p className="zx-map-note">
-                The computation Lean checked, read from the compiled proof: {fmt(tree.nodes.length)} cards for {fmt(tree.rawNodes)} proof steps.
-                Each card is a quantity, with the value it is proved to be near. Unfold a card to see what it is built from; a value used
-                twice is drawn once, with both uses.
+                {focus ? "A selected part of the certificate." : "The certificate's proof dependencies."} Unfold a quantity to follow its calculation;
+                select it to inspect the enclosure and arithmetic checks. Shared nodes are drawn once. The graph records the successful
+                proof, not a timed history of its construction.
               </p>
+              <div className="zx-map-jumps" role="group" aria-label="Start from a numerical quantity">
+                <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
+                {jumpCards.map(({ label, card: target }) => <button key={label} type="button" aria-pressed={focus === target!.id} onClick={() => { setFocus(target!.id); setCard(target!.id); }}>{label}</button>)}
+              </div>
               <ArgumentTree
-                key={tree.row}
+                key={`${tree.row}:${focus ?? tree.root}`}
                 ref={view}
                 graph={graph}
-                goal={tree.root}
+                goal={focus ?? tree.root}
                 insets={INSETS}
                 persist={false}
                 mode="steps"
                 oneCardEach
                 fitMax={window.innerWidth >= 2000 ? 2 : 1.4}
-                rootLabel={`Zero ${fmt(tree.row)}`}
+                rootLabel={focus ? byId.get(focus)?.label : `Interval ${fmt(tree.row)}`}
                 selected={card ?? undefined}
                 onSelect={setCard}
                 onTrace={noTrace}
@@ -240,7 +268,7 @@ function Detail({ row }: { row: Row }) {
             <Inspector card={card ? byId.get(card) ?? null : null} />
           </div>
         ) : (
-          <p className="zx-loading">Loading the computation…</p>
+          <p className={treeError ? "zx-error" : "zx-loading"}>{treeError ? `Could not load the computation: ${treeError}. The endpoint checks above are still available.` : "Loading the computation…"}</p>
         )
       ) : (
         <p className="zx-nodetail">
@@ -254,59 +282,79 @@ function Detail({ row }: { row: Row }) {
   );
 }
 
-function Ends({ row }: { row: Row }) {
+/** Compare finite decimals as integers; the compatibility path never rounds a bound upward. */
+function minDecimal(a: string, b: string): string {
+  const parts = (s: string): [bigint, number] => {
+    const [mantissa, exponent = "0"] = s.toLowerCase().split("e");
+    const [whole, fraction = ""] = mantissa.split(".");
+    return [BigInt(whole + fraction), fraction.length - Number(exponent)];
+  };
+  const [an, ap] = parts(a), [bn, bp] = parts(b), p = Math.max(ap, bp);
+  return an * 10n ** BigInt(p - ap) <= bn * 10n ** BigInt(p - bp) ? a : b;
+}
+
+function Ends({ row, neighbours, onCompare }: { row: Row; neighbours: readonly (Row | undefined)[]; onCompare(side: 0 | 1): void }) {
   const t = [row.left, row.right];
   return (
-    <table className="zx-ends">
-      <thead>
-        <tr>
-          <th scope="col">t</th>
-          <th scope="col">Z̃(t) lies in</th>
-          <th scope="col">Error bound at most</th>
-          <th scope="col">Left over</th>
-        </tr>
-      </thead>
-      <tbody>
-        {row.ends.map((e, i) => (
+    <div className="zx-end-wrap">
+      <table className="zx-ends">
+        <thead><tr>
+          <th scope="col">Endpoint t</th>
+          <th scope="col">Approximation Z̃(t)</th>
+          <th scope="col">Error at most</th>
+          <th scope="col">True Z(t)</th>
+          <th scope="col">Distance from 0, at least</th>
+        </tr></thead>
+        <tbody>{row.ends.map((e, i) => (
           <tr key={i}>
-            <th scope="row">{t[i]}</th>
+            <th scope="row">
+              {t[i]}
+              {neighbours[i] && <button type="button" className="zx-compare" onClick={() => onCompare(i as 0 | 1)}>Compare shared end</button>}
+            </th>
+            <td>[{e.z[0]}, {e.z[1]}]</td>
+            <td>{e.bound}</td>
             <td className={e.sign === "+" ? "is-pos" : "is-neg"}>
-              [{e.z[0]}, {e.z[1]}]
+              <strong>{e.sign === "+" ? "Positive" : "Negative"}</strong>
+              {e.trueZ && <span className="zx-range">[{e.trueZ[0]}, {e.trueZ[1]}]</span>}
             </td>
-            <td>
-              {e.bound}
-              {e.boundAt && e.boundAt !== t[i] && <span className="zx-at"> proved at t = {e.boundAt}</span>}
-            </td>
-            <td>{e.margin}</td>
+            <td>≥ {e.margin}</td>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        ))}</tbody>
+      </table>
+      <p className="zx-end-caption">The interval for true Z widens the approximation's enclosure by its analytic error bound. All displayed bounds round outward; distances round down.</p>
+    </div>
+  );
+}
+
+function EndpointComparison({ row, side, neighbour, onClose, onChoose }: { row: Row; side: 0 | 1; neighbour: Row; onClose(): void; onChoose(row: number): void }) {
+  const height = side === 0 ? row.left : row.right;
+  const entries = [{ row, end: row.ends[side] }, { row: neighbour, end: neighbour.ends[side === 0 ? 1 : 0] }].sort((a, b) => a.row.row - b.row.row);
+  return (
+    <section className="zx-comparison" aria-label="Two certificates at the same endpoint">
+      <div className="zx-row-nav"><h3>Same height, two certificates: t = {height}</h3><button type="button" onClick={onClose} aria-label="Close endpoint comparison">Close</button></div>
+      <p>These adjacent intervals meet here. Each certificate proves the sign at this height; its approximation and bound may differ.</p>
+      <div className="zx-end-wrap"><table className="zx-ends"><thead><tr><th>Interval</th><th>Formula</th><th>Approximation Z̃(t)</th><th>Error at most</th><th>Distance from 0, at least</th></tr></thead>
+        <tbody>{entries.map(({ row: r, end }) => <tr key={r.row}>
+          <th scope="row">{r.row === row.row ? fmt(r.row) : <button className="zx-compare" type="button" onClick={() => onChoose(r.row)}>{fmt(r.row)} →</button>}</th>
+          <td>{r.variant === "C0" ? "R–S without C₁" : VARIANT_WORDS[r.variant]}</td>
+          <td>[{end.z[0]}, {end.z[1]}]</td><td>{end.bound}</td><td>≥ {end.margin}</td>
+        </tr>)}</tbody></table></div>
+    </section>
   );
 }
 
 function Variant({ row }: { row: Row }) {
-  if (row.method === "EM")
-    return (
-      <p className="zx-variant">
-        Below t = 149.5 the approximation is the Euler–Maclaurin formula, here with cutoffs {row.params[0]} and {row.params[1]} and{" "}
-        {row.params[2]} Bernoulli terms at the two ends. The error bound is proved at each end.
-      </p>
-    );
+  if (row.method === "EM") return (
+    <p className="zx-variant">Euler–Maclaurin approximation, with cutoffs {row.params[0]} and {row.params[1]} and {row.params[2]} Bernoulli terms at the two ends. Each endpoint has its own error bound.</p>
+  );
+  const sameBound = row.ends[0].boundAt && row.ends[0].boundAt === row.ends[1].boundAt && row.ends[0].bound === row.ends[1].bound;
   return (
     <p className="zx-variant">
-      {row.variant === "C1" ? (
-        <>
-          The builder tries the Riemann–Siegel formula without its first correction term C₁ first. For this interval that did not go through,
-          so the certificate uses the formula with C₁, whose error bound is smaller. 74 of the 10,104 Riemann–Siegel intervals needed it,
-          always two neighbours sharing an end.{" "}
-        </>
-      ) : (
-        <>Riemann–Siegel formula without the correction term C₁, which the builder tries first. </>
-      )}
-      Usually one error bound is proved per batch of 200 intervals, at the batch's lowest height, and covers every height above it in
-      the batch; at 38 of the 20,208 Riemann–Siegel endpoints it is proved at the endpoint itself. The table says where each bound used
-      here was proved.
+      {row.variant === "C1"
+        ? "This certificate uses the Riemann–Siegel formula with C₁. The builder tries the version without C₁ first; the saved certificate identifies the successful version. Compare the shared endpoints to see which formulas the neighbouring certificates use. "
+        : "This certificate uses the Riemann–Siegel formula without C₁, the version the builder tries first. "}
+      {sameBound ? <>Both checks use the error bound proved at t = {row.ends[0].boundAt}. The bound decreases with height, so it also applies at these endpoints.</>
+        : <>The left error bound was proved at t = {row.ends[0].boundAt ?? row.left}; the right at t = {row.ends[1].boundAt ?? row.right}.</>}
     </p>
   );
 }
