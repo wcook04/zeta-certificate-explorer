@@ -26,7 +26,7 @@ const tickLabel = (v: number) => {
 function ratio(v: number): string {
   const a = Math.abs(v), s = v < 0 ? "−" : "";
   if (a < 100) return `${s}${a.toPrecision(2).replace(/\.0$/, "")}`;
-  if (a < 1000) return `${s}${Math.round(a / 10) * 10}`;
+  if (a < 1e5) return `${s}${(Math.round(a / 10) * 10).toLocaleString("en-GB")}`;
   const e = Math.floor(Math.log10(a));
   return `${s}${(a / 10 ** e).toFixed(1)}×10${String(e).split("").map((d) => SUP[d] ?? d).join("")}`;
 }
@@ -63,14 +63,15 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
   const step = Math.max(1, Math.ceil(decades / 4));
   const ticks = [0, 1, -1, ...Array.from({ length: Math.floor(decades / step) }, (_, k) => 10 ** ((k + 1) * step)).flatMap((v) => [v, -v])];
   const zeroY = sy(0);
+  const sel = ends.filter((e) => e.row === row.row).sort((a, b) => a.side - b.side);
 
   return (
     <figure className="zx-sign">
       <div ref={box} className="zx-sign-plot">
         <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`Z(t) is ${row.ends[0].sign === "+" ? "positive" : "negative"} at t = ${row.left} and ${row.ends[1].sign === "+" ? "positive" : "negative"} at t = ${row.right}`}>
           <rect x={PAD.left} width={width - PAD.left - PAD.right} y={sy(1)} height={sy(-1) - sy(1)} className="zx-sign-band" />
-          {width > 640 && <text x={width - PAD.right - 6} y={sy(1) - 5} textAnchor="end" className="zx-sign-bandlabel">inside the band the sign is not proved</text>}
-          <text transform={`translate(12 ${(PAD.top + height - PAD.bottom) / 2}) rotate(-90)`} textAnchor="middle" className="zx-axis">Z̃ ÷ error bound</text>
+          {width > 640 && <text x={width - PAD.right - 6} y={sy(1) - 5} textAnchor="end" className="zx-sign-bandlabel">between −1 and 1, |Z̃| is smaller than the error bound</text>}
+          <text transform={`translate(12 ${(PAD.top + height - PAD.bottom) / 2}) rotate(-90)`} textAnchor="middle" className="zx-axis">Z̃(t) ÷ error bound at t</text>
           {ticks.map((v) => (
             <g key={v}>
               <line x1={PAD.left} x2={width - PAD.right} y1={sy(v)} y2={sy(v)} className={v === 0 ? "zx-sign-zero" : "zx-sign-grid"} />
@@ -101,7 +102,7 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
                 <circle cx={x} cy={sy((e.lo + e.hi) / 2)} r={sel ? 5 : 3.5} />
                 {(sel || slot > 220) && (
                   <text x={x + (e.side === 0 ? 10 : -10)} y={sy((e.lo + e.hi) / 2)} dominantBaseline="middle" textAnchor={e.side === 0 ? "start" : "end"} className="zx-sign-val">
-                    {e.side === 0 ? "left " : "right "}{ratio(Math.min(e.lo, e.hi))}{ratio(Math.min(e.lo, e.hi)) === ratio(Math.max(e.lo, e.hi)) ? "" : ` to ${ratio(Math.max(e.lo, e.hi))}`}
+                    {sel ? `t = ${e.side === 0 ? row.left : row.right}: ` : ""}{ratio(Math.min(e.lo, e.hi))}{ratio(Math.min(e.lo, e.hi)) === ratio(Math.max(e.lo, e.hi)) ? "" : ` to ${ratio(Math.max(e.lo, e.hi))}`}
                   </text>
                 )}
               </g>
@@ -110,9 +111,13 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
         </svg>
       </div>
       <figcaption>
-        <b>Both endpoints clear the band, on opposite sides.</b> Each bar is the proved range of Z̃ at an endpoint divided by the error bound
-        there. A bar wholly outside the band from −1 to 1 fixes the sign of Z at that endpoint, and opposite signs at the two ends put a zero
-        between them. The scale is logarithmic outside the band; click a column to open that certificate.
+        Each column is one certificate, with #{row.row.toLocaleString("en-GB")} in the middle. At each end of an interval the chart shows the
+        proved range of Z̃(t) divided by the error bound at t. A value above 1 means Z̃(t) is positive and larger than the error bound, so
+        Z(t) is positive. A value below −1 means Z(t) is negative. Between −1 and 1 the sign of Z(t) would not be proved. For
+        #{row.row.toLocaleString("en-GB")} the value is {ratio(Math.min(sel[0].lo, sel[0].hi))}{ratio(sel[0].lo) === ratio(sel[0].hi) ? "" : ` to ${ratio(Math.max(sel[0].lo, sel[0].hi))}`} at
+        t = {row.left} and {ratio(Math.min(sel[1].lo, sel[1].hi))}{ratio(sel[1].lo) === ratio(sel[1].hi) ? "" : ` to ${ratio(Math.max(sel[1].lo, sel[1].hi))}`} at
+        t = {row.right}, so Z changes sign between them. The scale is logarithmic above 1 and below −1. Click a column to open that
+        certificate.
       </figcaption>
     </figure>
   );

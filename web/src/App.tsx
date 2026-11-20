@@ -184,7 +184,7 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
                 <span className="zx-t">[{r.left}, {r.right}]</span>
                 <span className="zx-formula">{VARIANT_SHORT[r.variant]}</span>
                 <span className="zx-num">{r.marginShort ?? minDecimal(r.ends[0].margin, r.ends[1].margin)}</span>
-                <span className="zx-has">{r.detail && <GraphIcon label="proof opened" />}</span>
+                <span className="zx-has">{r.detail && <GraphIcon label="has a proof tree" />}</span>
               </button>
             );
           })}
@@ -380,8 +380,8 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
         ) : (
           <div className="zx-nodetail">
             <p>
-              The proof has been opened for fourteen certificates so far, and #{fmt(row.row)} is not one of them. Its numbers below come from
-              this certificate in the compiled proof.
+              A proof tree has been made for fourteen certificates so far, and #{fmt(row.row)} is not one of them. The numbers in the two
+              checks below are still read from this certificate in the compiled proof.
             </p>
             <p>
               Open <a href="#/6710">#6,710</a> (Riemann–Siegel with C₁), <a href="#/53">#53</a> (Riemann–Siegel) or <a href="#/1">#1</a>{" "}
@@ -392,7 +392,12 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
       </section>
 
       <section className="zx-block" aria-labelledby="checks">
-        <h3 id="checks" className="zx-section">The two checks</h3>
+        <h3 id="checks" className="zx-section">The two checks that place a zero in this interval</h3>
+        <p className="zx-prose">
+          Both checks are on Z̃, the approximation to Z(t) that the certificate computes, at the two ends of the interval. First, Z̃ has
+          opposite signs at the two ends. Second, at each end |Z̃| is larger than the error bound, which is the most Z̃ can differ from
+          Z(t). Together they prove that Z(t) has opposite signs at the two ends, so Z has a zero between them.
+        </p>
         <div className="zx-checks-fig">
           <SignChart rows={rows} row={row} onChoose={onChoose} />
           <div className="zx-checks-low">

@@ -131,13 +131,13 @@ export function MarginStrip({ rows, selected, onChoose, height = 168 }: { rows: 
         {hovered && hover && (
           <div className="zx-fig-tip" style={{ left: Math.min(Math.max(sx(hover.x), 120), width - 120), top: Math.max(sy(hover.y) - 52, 0) }}>
             Certificate {hovered.row.toLocaleString("en-GB")}, t in [{hovered.left}, {hovered.right}]<br />
-            margin at least {hovered.marginShort}{hovered.variant === "C1" ? ", uses C₁" : hovered.variant === "EM" ? ", Euler–Maclaurin" : ""}
+            Z at least {hovered.marginShort} from 0 at both ends{hovered.variant === "C1" ? ", uses C₁" : hovered.variant === "EM" ? ", Euler–Maclaurin" : ""}
           </div>
         )}
       </div>
       <figcaption>
-        <span><b>All 10,156 certificates.</b> Across: the interval’s height t. Up, on a log scale: how far |Z̃| clears the error bound at the
-        tighter end. Click a dot to open it.</span>
+        <span><b>All 10,156 certificates.</b> Across: the height t of the interval. Up, on a log scale: how far Z is proved to stay from 0, at
+        whichever end of the interval that distance is smaller. Click a dot to open that certificate.</span>
         <span className="zx-legend">
           <span><i className="zx-key zx-key--em" /> Euler–Maclaurin, 52</span>
           <span><i className="zx-key zx-key--rs" /> Riemann–Siegel, 10,030</span>

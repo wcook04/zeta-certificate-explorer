@@ -50,11 +50,12 @@ export function Metaprogram({ tree, onShow }: { tree: CertTree; onShow(id: strin
   return (
     <ol className="zx-tech">
       <li>
-        <Count n={quantities} label="enclosed quantities" />
+        <Count n={quantities} label="numbers with a proved interval" />
         <h4>Each real number is given by four natural numbers</h4>
         <p>
-          Each quantity x is proved to satisfy |x − (±cn/cd)| ≤ rn/rd with four numerals (<Src path="Enclosure/Core.lean" line={23}>Real.IsNear</Src>),
-          and interval arithmetic combines these enclosures. An equation is used only to move an enclosure from one expression to another
+          Each number x in the computation comes with four natural numbers cn, cd, rn and rd and a proof that |x − (±cn/cd)| ≤ rn/rd
+          (<Src path="Enclosure/Core.lean" line={23}>Real.IsNear</Src>). Sums and products are computed on these four natural numbers by
+          interval arithmetic. An equation between two expressions is used only to move such a bound from one expression to the other
           (<Src path="Zeta/Certificate/Named.lean" line={26}>Named.lean</Src>).
         </p>
         <Example card={ex.enclosure} onShow={onShow}>
@@ -63,43 +64,47 @@ export function Metaprogram({ tree, onShow }: { tree: CertTree; onShow(id: strin
       </li>
       <li>
         <Count n={s.kernelChecks} label="integer comparisons" />
-        <h4>Every inequality is a Boolean on numerals</h4>
+        <h4>Every condition is a comparison of natural numbers</h4>
         <p>
-          Side conditions are stated with <code>Nat.ble</code>, <code>Nat.beq</code>, <code>Nat.mul</code> and other functions on natural numbers and proved by{" "}
-          <code>rfl</code>, so the kernel decides them with its built-in numeral arithmetic and never unfolds a real number.{" "}
-          <Src path="Enclosure/Defs.lean" line={31}>recentreOk</Src> puts the six conditions of a re-centring into one Boolean.
+          The conditions each lemma needs, such as one natural number being at most another, are written with <code>Nat.ble</code>,{" "}
+          <code>Nat.beq</code>, <code>Nat.mul</code> and other functions on natural numbers and proved by <code>rfl</code>. The kernel checks
+          them with its built-in arithmetic on natural numbers and never has to unfold the definition of a real number.{" "}
+          <Src path="Enclosure/Defs.lean" line={31}>recentreOk</Src> puts the six conditions of one re-centring (next column) into a single
+          check.
         </p>
         <p className="zx-tech-split">
-          {top.map(([h, n], i) => <span key={h}>{i ? ", " : ""}{fmt(n)} <code>{h}</code></span>)}{rest > 0 ? <>, {fmt(rest)} others</> : null}
+          Of these, {top.map(([h, n], i) => <span key={h}>{i ? ", " : ""}{fmt(n)} use <code>{h}</code></span>)}{rest > 0 ? <> and {fmt(rest)} use other functions</> : null}.
         </p>
         <Example card={ex.boolean} onShow={onShow}>
-          {ex.boolean && <>Longest numerals: <code>{shortLiterals(ex.boolean.checkExamples[0])}</code></>}
+          {ex.boolean && <>The comparison with the largest integers in this proof: <code>{shortLiterals(ex.boolean.checkExamples[0])}</code></>}
         </Example>
       </li>
       <li>
         <Count n={s.recentrings} label="re-centrings" />
-        <h4>The numerals are kept short</h4>
+        <h4>The integers are kept short</h4>
         <p>
-          Multiplying fractions lengthens the numerals. When a denominator passes a size cap,{" "}
-          <Src path="Enclosure/BinarySplit/Tactic/Enclosures.lean" line={119}>renorm</Src> moves the centre to a coarser dyadic grid and widens
-          the radius by the rounding (<Src path="Enclosure/Arith.lean" line={546}>recentre'</Src>). Here {fmt(s.recentringsShortened)} of
-          the {fmt(s.recentrings)} make the numerals shorter.
+          Multiplying fractions makes their numerators and denominators longer. When the denominator cd passes a size limit,{" "}
+          <Src path="Enclosure/BinarySplit/Tactic/Enclosures.lean" line={119}>renorm</Src> rounds the centre cn/cd to a nearby fraction whose
+          denominator is a power of two and adds the rounding error to the radius rn/rd, which is proved by{" "}
+          <Src path="Enclosure/Arith.lean" line={546}>recentre'</Src>. This proof does that {fmt(s.recentrings)} times, and{" "}
+          {fmt(s.recentringsShortened)} of those make the four integers shorter.
         </p>
         <Example card={ex.recentre} onShow={onShow}>
-          {ex.recentre && <>Largest cut, in {ex.recentre.label}: <b>{ex.recentre.recentred![0]}</b> digits across the four numerals down to <b>{ex.recentre.recentred![1]}</b></>}
+          {ex.recentre && <>The biggest reduction is in {ex.recentre.label}, where the four integers go from <b>{ex.recentre.recentred![0]}</b> digits in total to <b>{ex.recentre.recentred![1]}</b></>}
         </Example>
       </li>
       <li>
         <Count n={s.sealedLemmas} label="separate lemmas" />
-        <h4>Shared results are proved once and cited</h4>
+        <h4>Repeated results are proved once</h4>
         <p>
-          Constants such as log π are proved once for each precision (<Src path="Zeta/Certificate/Named.lean" line={377}>sealedConst</Src>),
-          other closed enclosures once for each statement (<Src path="Zeta/Certificate/Named.lean" line={347}>cachedNear</Src>), and the
-          Euler–Maclaurin running sum every <Src path="Zeta/Certificate/Named.lean" line={128}>8</Src> terms. The kernel checks each lemma
-          once however often it is cited; in the graph such a lemma has a second outline.
+          The interval for a constant such as log π is proved once for each precision as its own lemma
+          (<Src path="Zeta/Certificate/Named.lean" line={377}>sealedConst</Src>). Other bounds are also proved once as their own lemma, one for
+          each distinct statement (<Src path="Zeta/Certificate/Named.lean" line={347}>cachedNear</Src>), and the Euler–Maclaurin builder
+          proves its running sum as a lemma every <Src path="Zeta/Certificate/Named.lean" line={128}>8</Src> terms. The kernel checks each of
+          these lemmas once, however many times the proof uses it. In the tree, a box for such a lemma has a second outline.
         </p>
         <Example card={ex.sealed} onShow={onShow}>
-          {ex.sealed && <>Most cited: {ex.sealed.label}, <b>{ex.sealed.citedBy}</b> times</>}
+          {ex.sealed && <>The interval for {ex.sealed.label} is proved once and used <b>{ex.sealed.citedBy}</b> times</>}
         </Example>
       </li>
     </ol>
@@ -139,7 +144,7 @@ export function SizeChart({ sizes, row }: { sizes: Manifest["sizes"]; row: numbe
         {open && <text x={sx(Number(open.t)) - 10} y={sy(open.steps) - 12} textAnchor="end" className="zx-size-label">#{fmt(open.row)}: {fmt(open.steps)}</text>}
       </svg>
       <figcaption>
-        <b>Proof size against height</b> for the fourteen opened certificates, both axes logarithmic. <span className="zx-key zx-key--em" />{" "}
+        <b>Proof size against height.</b> The number of distinct proof steps in each of the fourteen certificates with a proof tree, against the height t of its interval, both axes logarithmic. <span className="zx-key zx-key--em" />{" "}
         Euler–Maclaurin: about 22,000 steps. <span className="zx-key zx-key--rs" /> Riemann–Siegel: from 730 at t = 149.5 to about 2,800 at
         t = 10,000, as the main sum grows from 4 to 39 terms.
       </figcaption>
