@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArgumentTree, type MapViewHandle } from "./map/ArgumentTree";
 import { certGraph } from "./certGraph";
 import { MarginStrip } from "./MarginStrip";
-import type { CertCard, CertTree, Manifest, Row } from "./types";
+import type { CertCard, CertTree, Manifest, Row, TreeStats } from "./types";
 
 const DATA = `${import.meta.env.BASE_URL}data`;
 const REPO = "https://github.com/smmercuri/zeta";
@@ -209,6 +209,10 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
   const noTrace = useCallback(() => undefined, []);
   const view = useRef<MapViewHandle>(null);
   const mapBox = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<string | null>(null);
+  const [pointer, setPointer] = useState<[number, number]>([0, 0]);
+  const sealedCss = useMemo(() => (tree ? tree.nodes.filter((n) => n.sealed && n.citedBy > 1)
+    .map((n) => `.zx-map [data-record="${n.id}"]`).join(",") + "{outline:2px solid var(--formal);outline-offset:4px}" : ""), [tree]);
   // The page scrolls over the graph; the graph only zooms on a pinch or Ctrl/Cmd with the wheel.
   // Stopped in the capture phase on our wrapper, so the map engine itself is unchanged.
   useEffect(() => {
@@ -261,7 +265,9 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
       {row.detail ? (
         graph && tree ? (
           <div className="zx-work">
-            <div className="zx-map" ref={mapBox}>
+            <HowLean stats={tree.stats} />
+            <style>{sealedCss}</style>
+            <div className="zx-map" ref={mapBox} onPointerMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPointer([e.clientX - r.left, e.clientY - r.top]); }} onPointerLeave={() => setHover(null)}>
               <div className="zx-map-head">
                 <div className="zx-map-jumps" role="group" aria-label="Start from a numerical quantity">
                   <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
@@ -282,8 +288,10 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
                 rootLabel={focus ? byId.get(focus)?.label : `Interval ${fmt(tree.row)}`}
                 selected={card ?? undefined}
                 onSelect={setCard}
+                onHover={setHover}
                 onTrace={noTrace}
               />
+              {hover && hover !== card && byId.get(hover) && <HoverCard card={byId.get(hover)!} at={pointer} />}
               {card && byId.get(card) && <Inspector card={byId.get(card)!} onClose={() => setCard(null)} />}
             </div>
           </div>
@@ -377,6 +385,40 @@ function EndpointComparison({ row, side, neighbour, onClose, onChoose }: { row: 
           <td>[{end.z[0]}, {end.z[1]}]</td><td>{end.bound}</td><td>≥ {end.margin}</td>
         </tr>)}</tbody></table></div>
     </section>
+  );
+}
+
+function HowLean({ stats: s }: { stats: TreeStats }) {
+  const heads = s.kernelCheckHeads.map(([h, n]) => <span key={h}>{fmt(n)} <code>{h}</code></span>);
+  return (
+    <section className="zx-howlean" aria-label="How Lean computes this certificate">
+      <h3>How Lean computes this certificate</h3>
+      <p>
+        The proof the kernel accepted has {fmt(s.proofSteps)} steps. {fmt(s.kernelChecks)} of them are comparisons of integer literals that the
+        kernel evaluates itself ({heads.reduce<React.ReactNode[]>((a, x, i) => (i ? [...a, ", ", x] : [x]), [])}), on literals of up to {s.longestKernelLiteral} digits.
+      </p>
+      <p>
+        To keep those integers small, {fmt(s.recentrings)} steps re-centre an enclosure on new endpoints; {fmt(s.recentringsShortened)} of them
+        shorten its numbers{s.biggestShortening ? <>, the largest from {s.biggestShortening[0]} digits to {s.biggestShortening[1]}</> : null}.
+        {" "}{fmt(s.sealedLemmas)} enclosures are proved once as separate lemmas and cited by later steps{s.sealedMostCited > 1 ? <>, one of them {s.sealedMostCited} times</> : null}, so the kernel checks each of them once. In the graph below, a card with a second outline is one of these, cited by more than one quantity; hover over any card for how Lean reached its value.
+      </p>
+    </section>
+  );
+}
+
+function HoverCard({ card, at }: { card: CertCard; at: [number, number] }) {
+  const checks = card.checks.reduce((n, c) => n + c.count, 0);
+  return (
+    <div className="zx-hover" style={{ left: at[0] + 16, top: at[1] + 16 }} role="tooltip">
+      <strong>{card.label}</strong>
+      {card.value && <span>in [{card.value.lo}, {card.value.hi}]</span>}
+      <span>Last step <code>{card.head.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "sealed $1").replace(/^(Enclosure|BSN|Zeta\.Certificates)\./, "")}</code>{card.stepCount ? `, after ${card.stepCount} steps on the same value` : ""}</span>
+      {card.sealed && <span>Proved once as a separate lemma{card.citedBy > 1 ? `, cited by ${card.citedBy} quantities` : ""}</span>}
+      {card.recentred && <span>Re-centred from {card.recentred[0]} digits to {card.recentred[1]}</span>}
+      {checks > 0 && <span>{checks} integer comparison{checks > 1 ? "s" : ""} the kernel evaluates{card.kernelLiteralDigits ? `, longest literal ${card.kernelLiteralDigits} digits` : ""}</span>}
+      {card.digits > 0 && <span>The enclosure is written with {card.digits} digits</span>}
+      <em>Click for the full statement</em>
+    </div>
   );
 }
 

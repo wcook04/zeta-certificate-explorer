@@ -292,6 +292,16 @@ FIELD_LABELS = {
 SIDE_FIELDS = {"le_fst", "fst_nonneg", "fstBernoulli_pos", "sndBernoulli_pos", "fstCutoff_pos", "sndCutoff_pos"}
 
 
+def enc_digits(n):
+    """Total decimal digits of an enclosure's coordinates (centre and radius, both parts)."""
+    total = 0
+    for part in ("re", "im"):
+        e = n.get(part)
+        if e:
+            total += sum(len(e[k]["value"] or "") for k in ("cn", "cd", "rn", "rd"))
+    return total
+
+
 def simplify(tree):
     """Contract the proof DAG onto the quantities it encloses.
 
@@ -398,8 +408,25 @@ def simplify(tree):
         for k in ch:
             kn = nodes[k]
             chk[(kn["kind"], kn.get("obligationHead") or "")] += 1
+        # How Lean established this value: sealed lemmas, re-centrings that shortened the numbers,
+        # and the size of the integers the kernel compares in its Boolean checks.
+        own = [c] + [k for k in s if k in nodes]
+        sealed = any(nodes[k]["kind"] == "aux" for k in own)
+        cut = None
+        for k in own:
+            kn = nodes[k]
+            if kn["head"].endswith("recentre'") and kn.get("re"):
+                kids = [nodes[x] for x in kn["children"] if nodes[x].get("re")]
+                if kids:
+                    before, after = enc_digits(kids[0]), enc_digits(kn)
+                    if after < before and (cut is None or before - after > cut[0] - cut[1]):
+                        cut = (before, after)
+        lit = max((max((len(x) for x in re.findall(r"\d+", nodes[k]["statement"])), default=0) for k in ch
+                   if nodes[k]["kind"] == "boolean_check"), default=0)
         out[c] = {
             "id": str(c), "label": label, "head": n["head"], "kind": n["kind"],
+            "sealed": sealed, "digits": enc_digits(n) if n.get("re") else 0,
+            "recentred": list(cut) if cut else None, "kernelLiteralDigits": lit,
             "subject": pretty(n["subject"]) if n.get("subject") else None,
             "statement": pretty(n["statement"]), "value": e,
             "steps": [{"head": nodes[k]["head"], "kind": nodes[k]["kind"], "statement": pretty(nodes[k]["statement"])}
@@ -437,7 +464,43 @@ def simplify(tree):
     else:
         main += side
     out[str(root)]["uses"] = main
-    return {"root": str(root), "nodes": list(out.values()), "rawNodes": len(nodes)}
+    cited = defaultdict(int)
+    for v in out.values():
+        for u in set(v["uses"]):
+            cited[u] += 1
+    for k, v in out.items():
+        v["citedBy"] = cited[k]
+    raw = list(nodes.values())
+    heads = defaultdict(int)
+    for x in raw:
+        if x["kind"] == "boolean_check":
+            heads[x.get("obligationHead") or ""] += 1
+    rec = []
+    for x in raw:
+        if x["head"].endswith("recentre'") and x.get("re"):
+            kids = [nodes[y] for y in x["children"] if nodes[y].get("re")]
+            if kids:
+                rec.append((enc_digits(kids[0]), enc_digits(x)))
+    shrunk = [r for r in rec if r[1] < r[0]]
+    best = max(shrunk, key=lambda r: r[0] - r[1]) if shrunk else None
+    indeg = defaultdict(int)
+    for x in raw:
+        for y in x["children"]:
+            indeg[y] += 1
+    aux = [x for x in raw if x["kind"] == "aux"]
+    stats = {
+        "proofSteps": len(raw),
+        "kernelChecks": sum(heads.values()),
+        "kernelCheckHeads": sorted(([h.replace("Enclosure.", ""), n] for h, n in heads.items()), key=lambda r: -r[1])[:4],
+        "longestKernelLiteral": max((max((len(m) for m in re.findall(r"\d+", x["statement"])), default=0)
+                                     for x in raw if x["kind"] == "boolean_check"), default=0),
+        "sealedLemmas": len(aux),
+        "sealedMostCited": max((indeg[x["id"]] for x in aux), default=0),
+        "recentrings": len(rec),
+        "recentringsShortened": len(shrunk),
+        "biggestShortening": list(best) if best else None,
+    }
+    return {"root": str(root), "nodes": list(out.values()), "rawNodes": len(nodes), "stats": stats}
 
 
 def main():

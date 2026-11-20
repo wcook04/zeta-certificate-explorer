@@ -43,6 +43,23 @@ export interface CertCard {
   checks: { kind: string; head: string; count: number }[];
   checkExamples: string[];
   uses: string[];
+  sealed: boolean;
+  citedBy: number;
+  digits: number;
+  recentred: [number, number] | null;
+  kernelLiteralDigits: number;
+}
+
+export interface TreeStats {
+  proofSteps: number;
+  kernelChecks: number;
+  kernelCheckHeads: [string, number][];
+  longestKernelLiteral: number;
+  sealedLemmas: number;
+  sealedMostCited: number;
+  recentrings: number;
+  recentringsShortened: number;
+  biggestShortening: [number, number] | null;
 }
 
 export interface CertTree {
@@ -57,6 +74,7 @@ export interface CertTree {
   batch: string;
   offset: number;
   frontier: number[];
+  stats: TreeStats;
 }
 
 export interface Manifest {
