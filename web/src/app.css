@@ -287,3 +287,24 @@ details summary { cursor: pointer; color: var(--formal); margin-top: var(--space
 .zx-howlean, .zx-sign figcaption, .zx-variant, .zx-end-caption { max-width: 64ch; }
 .zx-sign-int { min-height: 24px; }
 .zx-fig figcaption { max-width: 62ch; }
+
+/* the metaprogram section */
+.zx-sub { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: var(--space-3) 0 0; }
+.zx-tech { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: tech; }
+.zx-tech > li { display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--rule); counter-increment: tech; }
+.zx-tech > li:first-child { border-top: 0; }
+.zx-tech h4 { margin: 0 0 var(--space-1); font-size: var(--fs-base); font-weight: 600; }
+.zx-tech h4::before { content: counter(tech) ". "; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.zx-tech p { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); max-width: 66ch; }
+.zx-tech code { font-size: var(--fs-sm); }
+.zx-tech-here { font-size: var(--fs-sm) !important; color: var(--ink-3) !important; align-self: start; font-variant-numeric: tabular-nums; }
+.zx-tech-here b { display: block; font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); color: var(--ink); line-height: 1.1; }
+.zx-tech-ex { margin: var(--space-2) 0 0; font-family: var(--font-mono); font-size: var(--fs-xs); background: var(--sunk); padding: var(--space-2); border-radius: var(--radius-s); white-space: pre-wrap; word-break: break-word; max-width: 70ch; }
+.zx-size { margin: var(--space-2) 0 0; max-width: 40rem; }
+.zx-size figcaption { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: 64ch; }
+.zx-size-pt { stroke: var(--ground); stroke-width: 1.5; cursor: pointer; }
+.zx-size-pt.is-em { fill: var(--lit); }
+.zx-size-pt.is-rs { fill: var(--formal); }
+.zx-size-pt.is-sel { stroke: var(--ink); stroke-width: 2.5; }
+.zx-hover-ex { font-size: var(--fs-xs); white-space: normal; word-break: break-word; color: var(--ink-2); }
+@media (max-width: 820px) { .zx-tech > li { grid-template-columns: 1fr; gap: var(--space-1); } }

@@ -511,6 +511,7 @@ def main():
     assert checks["nonpositive"] == 0, checks
     index = {(r["method"], r["batch"], r["offset"]): r for r in rows}
     details = []
+    sizes = []
     for f in sorted((run / "certificates").glob("*.tree.json")):
         t = json.loads(f.read_text())
         method = "EM" if t["method"] == "euler_maclaurin" else "RS"
@@ -524,11 +525,14 @@ def main():
         (out / "trees" / f"{r['row']}.json").write_text(json.dumps(g, ensure_ascii=False, separators=(",", ":")))
         r["detail"] = True
         details.append((r["row"], len(g["nodes"]), g["rawNodes"]))
+        sizes.append({"row": r["row"], "method": method, "t": r["left"], "steps": g["stats"]["proofSteps"],
+                      "kernelChecks": g["stats"]["kernelChecks"], "sealed": g["stats"]["sealedLemmas"]})
     (out / "catalogue.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")))
     prov = dict(l.split(" ", 1) for l in (run / "provenance.txt").read_text().splitlines() if " " in l)
     manifest = {"rows": len(rows), "detailed": sorted(d[0] for d in details),
                 "variants": {v: sum(1 for r in rows if r["variant"] == v) for v in ("EM", "C0", "C1")},
-                "margins_checked": checks["margins"], "provenance": prov}
+                "margins_checked": checks["margins"], "provenance": prov,
+                "sizes": sorted(sizes, key=lambda s: s["row"])}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1))
     print(json.dumps(manifest["variants"]), "details (row, cards, proof nodes):", details)
 

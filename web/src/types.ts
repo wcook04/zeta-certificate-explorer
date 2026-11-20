@@ -83,4 +83,5 @@ export interface Manifest {
   variants: Record<string, number>;
   margins_checked: number;
   provenance: Record<string, string>;
+  sizes: { row: number; method: "EM" | "RS"; t: string; steps: number; kernelChecks: number; sealed: number }[];
 }

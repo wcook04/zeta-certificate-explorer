@@ -4,7 +4,8 @@ import { ArgumentTree, type MapViewHandle } from "./map/ArgumentTree";
 import { certGraph } from "./certGraph";
 import { MarginStrip } from "./MarginStrip";
 import { SignChart } from "./SignChart";
-import type { CertCard, CertTree, Manifest, Row, TreeStats } from "./types";
+import { Metaprogram, SizeChart, shortLiterals } from "./Metaprogram";
+import type { CertCard, CertTree, Manifest, Row } from "./types";
 
 const DATA = `${import.meta.env.BASE_URL}data`;
 const REPO = "https://github.com/smmercuri/zeta";
@@ -68,8 +69,8 @@ export function App() {
         <p className="zx-lede">
           Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean proof</a> that the Riemann hypothesis holds up to height 10,011 uses
           10,156 certificates. Each one shows that Hardy’s Z function changes sign on a short interval of t, so ζ(½ + it) has a zero there.
-          This page lists every certificate with its numbers read from the compiled proof, and for fourteen of them draws the computation
-          Lean’s kernel checked.
+          This page lists every certificate with its numbers read from the compiled proof. For fourteen of them it shows how the
+          certificate metaprogram builds a proof that Lean’s kernel can check quickly, and the proof term itself as a graph.
         </p>
         <p className="zx-starts">
           Places to start: <a href="#/6710">the pair of intervals near t = 7005</a>, where both certificates needed the C₁ term;{" "}
@@ -95,7 +96,7 @@ export function App() {
         </section>
 
         <section className="zx-detail" aria-label="The selected interval">
-          {current && rows ? <Detail key={current.row} rows={rows} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} /> : <p className="zx-loading">Loading the certificates…</p>}
+          {current && rows ? <Detail key={current.row} rows={rows} manifest={manifest} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} /> : <p className="zx-loading">Loading the certificates…</p>}
         </section>
       </main>
 
@@ -170,7 +171,7 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
   );
 }
 
-function Detail({ rows, row, previous, next, onChoose }: { rows: Row[]; row: Row; previous?: Row; next?: Row; onChoose(row: number): void }) {
+function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]; manifest: Manifest | null; row: Row; previous?: Row; next?: Row; onChoose(row: number): void }) {
   const [tree, setTree] = useState<CertTree | null>(null);
   const [card, setCard] = useState<string | null>(null);
   const [treeError, setTreeError] = useState<string | null>(null);
@@ -246,17 +247,18 @@ function Detail({ rows, row, previous, next, onChoose }: { rows: Row[]; row: Row
         Z(t) is {sign(row.ends[0])} at the left end and {sign(row.ends[1])} at the right, after allowing for the rounding in the computation and
         for the error of the approximation. Z is continuous, so it is zero somewhere in between.
       </p>
-      <SignChart rows={rows} row={row} onChoose={onChoose} />
-      <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
-      {comparison !== null && neighbours[comparison] && (
-        <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
-      )}
-      <Variant row={row} />
-      <h3 className="zx-section">The computation Lean checked</h3>
+      <h3 className="zx-section">How Lean checks this certificate</h3>
+      <p className="zx-variant">
+        In Python the two checks below take a few lines and a fraction of a second. Lean’s kernel is slow at arithmetic, and the sums
+        get longer with height, so the metaprogram builds the proof in a form the kernel can check quickly. Four of the techniques in its
+        source are below, each with its count in this certificate.
+      </p>
       {row.detail ? (
         graph && tree ? (
           <div className="zx-work">
-            <HowLean stats={tree.stats} />
+            <Metaprogram tree={tree} />
+            {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
+            <h4 className="zx-sub">The proof term, as a graph</h4>
             <style>{sealedCss}</style>
             <div className="zx-map" ref={mapBox} onPointerMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPointer([e.clientX - r.left, e.clientY - r.top]); }} onPointerLeave={() => setHover(null)}>
               <div className="zx-map-head">
@@ -296,6 +298,13 @@ function Detail({ rows, row, previous, next, onChoose }: { rows: Row[]; row: Row
           <a href="#/53">certificate 53</a> or <a href="#/1">certificate 1</a>, or list all fourteen with the “Computation shown” filter.
         </p>
       )}
+      <h3 className="zx-section">The two checks</h3>
+      <SignChart rows={rows} row={row} onChoose={onChoose} />
+      <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
+      {comparison !== null && neighbours[comparison] && (
+        <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
+      )}
+      <Variant row={row} />
     </div>
   );
 }
@@ -366,30 +375,17 @@ function EndpointComparison({ row, side, neighbour, onClose, onChoose }: { row: 
   );
 }
 
-function HowLean({ stats: s }: { stats: TreeStats }) {
-  const heads = s.kernelCheckHeads.map(([h, n]) => <span key={h}>{fmt(n)} <code>{h}</code></span>);
-  return (
-    <p className="zx-howlean">
-      The proof term for this certificate has {fmt(s.proofSteps)} distinct steps. In {fmt(s.kernelChecks)} of them the kernel evaluates a
-      comparison of integer literals itself ({heads.reduce<React.ReactNode[]>((a, x, i) => (i ? [...a, ", ", x] : [x]), [])}), with literals of up
-      to {s.longestKernelLiteral} digits. To keep those integers short, {fmt(s.recentrings)} steps replace an enclosure with a wider one about a
-      new centre, and in {fmt(s.recentringsShortened)} of them the new numbers are shorter{s.biggestShortening ? <>, at most from {s.biggestShortening[0]} digits to {s.biggestShortening[1]}</> : null}.
-      {" "}{fmt(s.sealedLemmas)} enclosures are proved once as separate lemmas and then cited{s.sealedMostCited > 1 ? <>, one of them {s.sealedMostCited} times</> : null}, so
-      the kernel checks each only once; in the graph, those cited more than once have a second outline.
-    </p>
-  );
-}
-
 function HoverCard({ card, at }: { card: CertCard; at: [number, number] }) {
   const checks = card.checks.reduce((n, c) => n + c.count, 0);
   return (
     <div className="zx-hover" style={{ left: at[0] + 16, top: at[1] + 16 }} role="tooltip">
       <strong>{card.label}</strong>
       {card.value && <span>in [{card.value.lo}, {card.value.hi}]</span>}
-      <span>Last step <code>{card.head.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "sealed $1").replace(/^(Enclosure|BSN|Zeta\.Certificates)\./, "")}</code>{card.stepCount ? `, after ${card.stepCount} steps on the same value` : ""}</span>
+      <span>Proved by <code>{card.head.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "sealed $1").replace(/^(Enclosure|BSN|Zeta\.Certificates)\./, "")}</code>{card.stepCount ? `, after ${card.stepCount} steps on the same value` : ""}</span>
       {card.sealed && <span>Proved once as a separate lemma{card.citedBy > 1 ? `, cited by ${card.citedBy} quantities` : ""}</span>}
       {card.recentred && <span>Re-centred from {card.recentred[0]} digits to {card.recentred[1]}</span>}
-      {checks > 0 && <span>{checks} integer comparison{checks > 1 ? "s" : ""} the kernel evaluates{card.kernelLiteralDigits ? `, longest literal ${card.kernelLiteralDigits} digits` : ""}</span>}
+      {checks > 0 && <span>{checks} Boolean check{checks > 1 ? "s" : ""} on numerals that the kernel evaluates, the longest numeral {card.kernelLiteralDigits} digits</span>}
+      {card.checkExamples[0] && <code className="zx-hover-ex">{shortLiterals(card.checkExamples[0])}</code>}
       {card.digits > 0 && <span>The enclosure is written with {card.digits} digits</span>}
       <em>Click for the full statement.</em>
     </div>
