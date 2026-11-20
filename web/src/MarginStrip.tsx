@@ -18,13 +18,12 @@ function token(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888";
 }
 
-export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selected: number | null; onChoose(row: number): void }) {
+export function MarginStrip({ rows, selected, onChoose, height = 168 }: { rows: Row[]; selected: number | null; onChoose(row: number): void; height?: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
   const [hover, setHover] = useState<Pt | null>(null);
   const [scheme, setScheme] = useState(0);
-  const height = 168;
 
   const pts = useMemo<Pt[]>(() => rows.map((r) => ({
     row: r.row,
@@ -60,7 +59,8 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
     const rule = token("--rule");
     const accent = token("--formal");
     const em = token("--lit");
-    g.font = `12px ${token("--font-sans")}`;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    g.font = `${Math.round(rem * 0.75)}px ${token("--font-sans")}`;
     g.fillStyle = ink3;
     g.strokeStyle = rule;
     g.lineWidth = 1;
@@ -75,19 +75,19 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
     // ordinary intervals first, marked ones on top
     g.globalAlpha = 0.45;
     g.fillStyle = ink3;
-    for (const p of pts) if (p.variant === "C0") g.fillRect(sx(p.x) - 0.75, sy(p.y) - 0.75, 1.5, 1.5);
+    for (const p of pts) if (p.variant === "C0") g.fillRect(sx(p.x) - 0.9, sy(p.y) - 0.9, 1.8, 1.8);
     g.globalAlpha = 1;
     g.fillStyle = em;
-    for (const p of pts) if (p.variant === "EM") { g.beginPath(); g.arc(sx(p.x), sy(p.y), 2.2, 0, 7); g.fill(); }
+    for (const p of pts) if (p.variant === "EM") { g.beginPath(); g.arc(sx(p.x), sy(p.y), 2.6, 0, 7); g.fill(); }
     g.fillStyle = accent;
-    for (const p of pts) if (p.variant === "C1") { g.beginPath(); g.arc(sx(p.x), sy(p.y), 2.6, 0, 7); g.fill(); }
+    for (const p of pts) if (p.variant === "C1") { g.beginPath(); g.arc(sx(p.x), sy(p.y), 3, 0, 7); g.fill(); }
     const sel = selected ? pts[selected - 1] : undefined;
     if (sel) {
       g.strokeStyle = token("--ink");
       g.lineWidth = 1.5;
       g.beginPath(); g.arc(sx(sel.x), sy(sel.y), 7, 0, 7); g.stroke();
       const label = `#${sel.row.toLocaleString("en-GB")}`;
-      g.font = `600 13px ${token("--font-sans")}`;
+      g.font = `600 ${Math.round(rem * 0.85)}px ${token("--font-sans")}`;
       const right = sx(sel.x) > width - 90;
       g.textAlign = right ? "right" : "left"; g.textBaseline = "middle";
       g.lineWidth = 4; g.strokeStyle = token("--surface"); g.lineJoin = "round";
@@ -96,7 +96,7 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
       g.fillStyle = token("--ink");
       g.fillText(label, lx, ly);
     }
-  }, [pts, width, selected, scheme]);
+  }, [pts, width, height, selected, scheme]);
 
   function nearest(e: React.MouseEvent<HTMLCanvasElement>): Pt | null {
     const r = e.currentTarget.getBoundingClientRect();

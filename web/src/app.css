@@ -8,16 +8,17 @@
      proof opened  a small graph glyph, never a colour */
 
 :root {
+  font-size: clamp(16px, 0.5vw + 9.6px, 22px);
   --pos: var(--rel-formalizes-lit);
   --neg: var(--fail);
-  --gutter: clamp(16px, 2.2vw, 40px);
+  --gutter: clamp(16px, 2vw, 48px);
   --list-w: 26rem;
   --prose: 66ch;
 }
 
 html, body, #root { min-height: 100%; }
 body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-.zx { max-width: 2200px; margin: 0 auto; }
+.zx { max-width: 3200px; margin: 0 auto; }
 .zx a { color: var(--formal); text-underline-offset: 0.18em; }
 .zx code { font-family: var(--font-mono); font-size: 0.86em; }
 .zx button { font: inherit; }
@@ -29,37 +30,27 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 .zx-pos { color: var(--pos); font-weight: 600; }
 .zx-neg { color: var(--neg); font-weight: 600; }
 
-/* ---- header ---------------------------------------------------------------------------- */
-.zx-head {
-  display: grid; grid-template-columns: minmax(0, 44rem) minmax(0, 1fr); gap: var(--space-5) var(--space-8);
-  align-items: end; padding: var(--space-7) var(--gutter) var(--space-5);
-}
-.zx-intro { display: contents; }
-.zx-titles { grid-column: 1 / -1; }
-.zx-kicker { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); letter-spacing: 0.01em; }
-.zx-head h1 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-display); line-height: var(--lh-tight); letter-spacing: -0.015em; margin: 0 0 var(--space-4); max-width: 30ch; text-wrap: balance; }
-.zx-lede { font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); color: var(--ink-2); max-width: var(--prose); margin: 0; text-wrap: pretty; }
-.zx-starts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); align-items: stretch; }
-.zx-starts h2 { grid-column: 1 / -1; margin: 0 0 var(--space-1); font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); }
-.zx-starts a {
-  display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); text-decoration: none; color: var(--ink);
-  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-m);
-  transition: border-color var(--t-hover) var(--ease-out), background var(--t-hover) var(--ease-out);
-}
-.zx-starts a:hover { border-color: var(--rule-control); background: var(--raised); }
-.zx-starts b { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h4); font-variant-numeric: tabular-nums; }
-.zx-starts span { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); }
+/* ---- header: words on the left, every certificate on the right ------------------------- */
+.zx-head { display: grid; grid-template-columns: minmax(24rem, 38rem) minmax(0, 1fr); gap: var(--space-5) clamp(24px, 3vw, 64px); align-items: center; padding: var(--space-6) var(--gutter) var(--space-4); }
+.zx-kicker { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); }
+.zx-head h1 { font-family: var(--font-serif); font-weight: 500; font-size: 2.6rem; line-height: 1.08; letter-spacing: -0.015em; margin: 0 0 var(--space-4); text-wrap: balance; }
+.zx-lede { font-family: var(--font-serif); font-size: var(--fs-base); line-height: 1.55; color: var(--ink-2); margin: 0; text-wrap: pretty; }
+.zx-starts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); align-items: center; }
+.zx-starts-h { font-size: var(--fs-sm); color: var(--ink-3); margin-right: var(--space-1); }
+.zx-starts a { display: inline-flex; gap: 0.4em; align-items: baseline; padding: 0.35rem 0.7rem; border: 1px solid var(--rule-control); border-radius: 999px; color: var(--ink-2); text-decoration: none; font-size: var(--fs-sm); }
+.zx-starts a:hover { color: var(--ink); border-color: var(--ink-3); background: var(--raised); }
+.zx-starts b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.zx-overview { min-width: 0; min-height: calc(250px + 3.5rem); }
 
 /* ---- the overview of all certificates ------------------------------------------------- */
-.zx-fig-slot { min-height: calc(168px + 4.5rem); padding: 0 var(--gutter); }
-.zx-fig { margin: 0; padding: var(--space-3) var(--space-4) var(--space-3); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
+.zx-fig { margin: 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
 .zx-fig-plot { position: relative; }
 .zx-fig canvas { display: block; }
 .zx-fig canvas.is-pointing { cursor: pointer; }
 .zx-fig-tip { position: absolute; transform: translateX(-50%); pointer-events: none; background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); padding: 0.3rem 0.55rem; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--card-shadow); z-index: 3; }
 .zx-fig figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-5); margin-top: var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); }
+.zx-fig figcaption > span:first-child { max-width: 70ch; }
 .zx-fig figcaption b { color: var(--ink); font-weight: 600; }
-.zx-fig figcaption > span:first-child { max-width: 78ch; }
 .zx-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); }
 .zx-legend > span { white-space: nowrap; }
 .zx-key { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; vertical-align: -0.02em; margin-right: 0.15rem; }
@@ -100,6 +91,7 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 
 /* ---- the open certificate ------------------------------------------------------------- */
 .zx-detail { min-width: 0; container-type: inline-size; container-name: detail; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
+.zx-main { padding-top: var(--space-3); }
 .zx-cert { display: flex; flex-direction: column; min-width: 0; }
 .zx-idbar {
   position: sticky; top: 0; z-index: 8; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4);
@@ -115,51 +107,60 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 .zx-chip.is-em { color: var(--lit); }
 .zx-chip.is-c1 { color: var(--formal); }
 
-.zx-cert-head { padding: var(--space-6) var(--space-6) var(--space-2); }
-.zx-cert-head h2 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin: 0 0 var(--space-3); }
+.zx-cert-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); padding: var(--space-6) var(--space-6) var(--space-2); align-items: center; }
+@container detail (min-width: 60rem) { .zx-cert-head { grid-template-columns: minmax(0, 1fr) minmax(20rem, 30rem); } }
+.zx-cert-head h2 { font-family: var(--font-serif); font-weight: 500; font-size: 2.25rem; line-height: var(--lh-tight); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin: 0 0 var(--space-3); }
 .zx-conclusion { margin: 0; max-width: var(--prose); font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); color: var(--ink-2); text-wrap: pretty; }
+.zx-verdict { margin: 0; display: grid; gap: var(--space-2); }
+.zx-verdict > div { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-m); border-left: 3px solid currentColor; background: var(--sunk); }
+.zx-verdict > div.is-pos { color: var(--pos); }
+.zx-verdict > div.is-neg { color: var(--neg); }
+.zx-verdict dt { font-family: var(--font-serif); font-size: var(--fs-h4); color: var(--ink); font-variant-numeric: tabular-nums; }
+.zx-verdict dd { margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; font-size: var(--fs-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.zx-verdict-sign { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 600; color: currentColor; }
+.zx-verdict > div.is-pos .zx-verdict-sign { color: var(--pos); }
+.zx-verdict > div.is-neg .zx-verdict-sign { color: var(--neg); }
+.zx-verdict p { margin: 0; font-size: var(--fs-sm); color: var(--ink-3); padding-left: var(--space-4); }
+.zx-verdict p b { color: var(--ink); }
 
 .zx-block { padding: var(--space-5) var(--space-6) var(--space-6); border-top: 1px solid var(--rule); margin-top: var(--space-5); }
 .zx-section { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); margin: 0 0 var(--space-3); }
 .zx-prose { margin: 0 0 var(--space-5); max-width: var(--prose); font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); color: var(--ink-2); text-wrap: pretty; }
 
-/* techniques beside the graph */
-.zx-bench { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); align-items: start; }
-/* medium and large: the four techniques as a two-by-two grid, the graph full width below */
-@container detail (min-width: 56rem) {
-  .zx-tech { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-  .zx-tech > li, .zx-tech > li:first-child { padding: var(--space-4); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--raised); align-content: start; }
-  .zx-tech > li { grid-template-columns: 5.5rem minmax(0, 1fr); }
-  .zx-tech-ex { background: var(--sunk); }
+/* intro beside the size chart; four techniques as flat columns; the graph full width */
+.zx-how-intro { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4) var(--space-7); align-items: center; margin-bottom: var(--space-5); }
+@container detail (min-width: 66rem) { .zx-how-intro { grid-template-columns: minmax(0, 1fr) minmax(22rem, 32rem); align-items: start; } }
+.zx-how-intro .zx-prose { margin: 0; }
+.zx-bench { display: grid; gap: var(--space-5); }
+.zx-tech { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--rule); }
+@container detail (min-width: 48rem) { .zx-tech { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container detail (min-width: 84rem) { .zx-tech { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.zx-tech > li { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5) var(--space-4) 0; border-bottom: 1px solid var(--rule); }
+@container detail (min-width: 48rem) {
+  .zx-tech > li { padding-left: var(--space-5); border-left: 1px solid var(--rule); }
+  .zx-tech > li:nth-child(2n + 1) { padding-left: 0; border-left: 0; }
 }
-/* very wide: techniques in a column beside a sticky graph */
-@container detail (min-width: 100rem) {
-  .zx-bench { grid-template-columns: minmax(28rem, 34rem) minmax(0, 1fr); gap: var(--space-6); }
-  .zx-tech { grid-template-columns: minmax(0, 1fr); }
-  .zx-bench-graph { position: sticky; top: 4.25rem; }
-  .zx-bench .zx-map { height: calc(100vh - 6rem); max-height: 64rem; }
+@container detail (min-width: 84rem) {
+  .zx-tech > li { border-bottom: 0; }
+  .zx-tech > li:nth-child(2n + 1) { padding-left: var(--space-5); border-left: 1px solid var(--rule); }
+  .zx-tech > li:first-child { padding-left: 0; border-left: 0; }
 }
-.zx-tech { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.zx-tech > li { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--space-4); padding: var(--space-4) 0; border-top: 1px solid var(--rule); }
-.zx-tech > li:first-child { border-top: 0; padding-top: 0; }
-.zx-tech-n { margin: 0; font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-snug); font-variant-numeric: tabular-nums; }
-.zx-tech-n b { display: block; font-family: var(--font-serif); font-weight: 500; font-size: 1.75rem; line-height: 1.05; color: var(--ink); margin-bottom: 2px; }
-.zx-tech h4 { margin: 0.15rem 0 var(--space-2); font-size: var(--fs-card); font-weight: 600; color: var(--ink); }
-.zx-tech p { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); max-width: var(--prose); }
-.zx-tech p + p { margin-top: var(--space-2); }
-.zx-tech-split { font-size: var(--fs-sm) !important; line-height: var(--lh-ui) !important; color: var(--ink-3) !important; font-variant-numeric: tabular-nums; }
-.zx-tech-split b { color: var(--ink-2); font-weight: 600; }
-.zx-tech-ex { margin-top: var(--space-3); display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-s); background: var(--sunk); border-left: 2px solid var(--rule-strong); font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.zx-tech-ex-body { display: block; }
-.zx-tech-ex-body > span { display: block; margin-bottom: var(--space-1); }
+.zx-tech-n { margin: 0; font-size: var(--fs-sm); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.zx-tech-n b { font-family: var(--font-serif); font-weight: 500; font-size: 2.1rem; line-height: 1; color: var(--ink); margin-right: 0.2rem; }
+.zx-tech h4 { margin: 0; font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
+.zx-tech p { margin: 0; font-size: var(--fs-ui); line-height: 1.6; color: var(--ink-2); }
+.zx-tech-split { font-size: var(--fs-sm) !important; color: var(--ink-3) !important; font-variant-numeric: tabular-nums; }
+.zx-tech-ex { margin-top: auto; padding-top: var(--space-3); display: grid; gap: var(--space-2); }
+.zx-tech-ex p { font-size: var(--fs-sm) !important; line-height: var(--lh-ui) !important; color: var(--ink-2); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .zx-tech-ex b { color: var(--ink); }
-.zx-tech-code { display: block; font-size: var(--fs-xs) !important; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
-.zx-tech-ex button { justify-self: start; min-height: 28px; padding: 0 0.7rem; border: 1px solid var(--rule-control); border-radius: var(--radius-s); background: var(--surface); color: var(--ink); font-size: var(--fs-sm); cursor: pointer; }
+.zx-tech-ex code { color: var(--ink); }
+.zx-nums { font-variant-numeric: tabular-nums; color: var(--ink); }
+.zx-tech-ex button { justify-self: start; min-height: 30px; padding: 0 0.8rem; border: 1px solid var(--rule-control); border-radius: 999px; background: transparent; color: var(--ink); font-size: var(--fs-sm); cursor: pointer; }
 .zx-tech-ex button::after { content: " →"; }
 .zx-tech-ex button:hover { background: var(--raised); border-color: var(--ink-3); }
 
 /* the proof graph */
-.zx-map { position: relative; display: flex; flex-direction: column; height: clamp(28rem, 64vh, 46rem); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--ground); overflow: hidden; }
+.zx-map { position: relative; display: flex; flex-direction: column; height: clamp(32rem, 82vh, 64rem); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--ground); overflow: hidden; }
 .zx-map > .tree { flex: 1; min-height: 0; position: relative; }
 .zx-map-head { display: grid; gap: var(--space-2); padding: var(--space-3); border-bottom: 1px solid var(--rule); background: var(--surface); }
 .zx-map-head h4 { margin: 0; font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); }
@@ -171,7 +172,7 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 .zx-seg button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
 .zx-zoom button { min-width: 32px; }
 .zx-map-note { margin: 0; padding: var(--space-2) var(--space-3); border-top: 1px solid var(--rule); background: var(--surface); font-size: var(--fs-xs); line-height: var(--lh-ui); color: var(--ink-3); }
-.zx-map-note { padding-right: max(var(--space-3), calc(100% - 90ch)); }
+.zx-map-note { padding-right: max(var(--space-3), calc(100% - 78ch)); }
 
 .zx-hover { position: absolute; z-index: 6; pointer-events: none; max-width: 24rem; display: grid; gap: 0.2rem; padding: var(--space-2) var(--space-3); background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); box-shadow: var(--shadow-panel); font-size: var(--fs-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .zx-hover strong { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-base); color: var(--ink); }
@@ -196,7 +197,7 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 .zx-nodetail p + p { margin-top: var(--space-2); }
 
 /* proof size */
-.zx-size { margin: var(--space-6) 0 0; display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 28rem); gap: var(--space-3) var(--space-6); align-items: center; }
+.zx-size { margin: 0; display: grid; gap: var(--space-2); max-width: 32rem; }
 .zx-size figcaption { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); }
 .zx-size figcaption b, .zx-sign figcaption b { color: var(--ink); font-weight: 600; }
 .zx-size-pt { stroke: var(--surface); stroke-width: 1.5; cursor: pointer; }
@@ -206,33 +207,37 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 .zx-size-label { fill: var(--ink); font-size: 13px; font-weight: 600; font-family: var(--font-sans); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
 .zx-grid-line { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 4; }
 .zx-tick { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
-.zx-axis { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-weight: 600; }
+.zx-axis { fill: var(--ink-3); font-size: 0.75rem; font-family: var(--font-sans); font-weight: 600; }
 
 /* ---- the two checks: chart, table and notes as one figure ----------------------------- */
-.zx-checks-fig { display: grid; gap: var(--space-4); max-width: 72rem; }
+.zx-checks-fig { display: grid; gap: var(--space-5); }
+.zx-checks-low { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4) var(--space-7); align-items: start; }
+@container detail (min-width: 76rem) { .zx-checks-low { grid-template-columns: auto minmax(20rem, 1fr); } }
 .zx-sign { margin: 0; min-width: 0; }
 .zx-sign-plot { width: 100%; min-width: 0; overflow: hidden; }
 .zx-sign svg { display: block; overflow: visible; }
 .zx-sign figcaption { margin-top: var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: var(--prose); }
 .zx-sign-grid { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 4; }
 .zx-sign-zero { stroke: var(--ink-3); stroke-width: 1; }
-.zx-sign-tick, .zx-sign-label { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-sign-tick, .zx-sign-label { fill: var(--ink-3); font-size: 0.75rem; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
 .zx-sign-band { fill: color-mix(in oklab, var(--ink-3) 13%, transparent); }
-.zx-sign-bandlabel { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-style: italic; }
+.zx-sign-bandlabel { fill: var(--ink-3); font-size: 0.75rem; font-family: var(--font-sans); font-style: italic; }
 .zx-sign-int { cursor: pointer; }
 .zx-sign-col { fill: transparent; }
 .zx-sign-int.is-hover .zx-sign-col { fill: color-mix(in oklab, var(--ink) 4%, transparent); }
-.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--ink) 5%, transparent); stroke: var(--rule-strong); }
-.zx-sign-int.is-sel .zx-sign-label { fill: var(--ink); font-weight: 700; font-size: 13px; }
+.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--ink) 6%, transparent); stroke: none; }
+.zx-sign-int:not(.is-sel) .zx-sign-col { stroke: var(--rule); stroke-dasharray: 2 4; }
+.zx-sign-int.is-sel .zx-sign-label { fill: var(--ink); font-weight: 700; font-size: 0.85rem; }
 .zx-sign-bracket { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
 .zx-sign-int.is-sel .zx-sign-bracket { stroke: var(--ink); stroke-width: 3; }
-.zx-sign-end { opacity: 0.4; }
+.zx-sign-end { opacity: 0.6; }
+.zx-sign-sub { font-weight: 400; fill: var(--ink-3); }
 .zx-sign-end.is-sel { opacity: 1; }
 .zx-sign-end line { stroke-width: 2; }
 .zx-sign-end.is-sel line { stroke-width: 3; }
 .zx-sign-end.is-pos line, .zx-sign-end.is-pos circle { stroke: var(--pos); fill: var(--pos); }
 .zx-sign-end.is-neg line, .zx-sign-end.is-neg circle { stroke: var(--neg); fill: var(--neg); }
-.zx-sign-val { font-size: 13px; font-family: var(--font-sans); font-weight: 600; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface) !important; stroke-width: 4px; }
+.zx-sign-val { font-size: 0.85rem; font-family: var(--font-sans); font-weight: 600; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface) !important; stroke-width: 4px; }
 .zx-sign-end.is-pos .zx-sign-val { fill: var(--pos); }
 .zx-sign-end.is-neg .zx-sign-val { fill: var(--neg); }
 
@@ -262,34 +267,23 @@ body { margin: 0; background: var(--ground); color: var(--ink); font-family: var
 .zx-block .zx-loading, .zx-block .zx-error { padding: 0; }
 
 /* ---- smaller screens ------------------------------------------------------------------ */
-@media (max-width: 1400px) {
-  .zx-head { grid-template-columns: minmax(0, 1fr); align-items: start; padding-top: var(--space-6); }
+@media (max-width: 1100px) {
+  .zx-head { grid-template-columns: minmax(0, 1fr); align-items: start; }
 }
 @media (max-width: 1100px) {
-  .zx-starts { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
-  .zx-starts h2 { grid-column: 1 / -1; }
-  .zx-size { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
   :root { --list-w: 100%; }
   .zx-main { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
   .zx-table { position: static; height: 60vh; }
-  .zx-fig-slot { min-height: calc(168px + 8rem); }
 }
 @media (max-width: 600px) {
-  .zx-head h1 { font-size: 1.75rem; }
+  .zx-head h1 { font-size: 1.9rem; }
   .zx-idbar, .zx-cert-head, .zx-block, .zx-foot { padding-left: var(--space-4); padding-right: var(--space-4); }
   .zx-cert-head h2 { font-size: var(--fs-h2); }
   .zx-tr { grid-template-columns: 3rem minmax(0, 1fr) 3.8rem 3.2rem 0.9rem; gap: 6px; padding: 0 var(--space-2); font-size: var(--fs-sm); }
-  .zx-tech > li { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
-  .zx-tech-n b { display: inline; font-size: 1.4rem; margin-right: 0.35rem; }
   .zx-map { height: 70vh; }
   .zx-inspect { position: absolute; top: auto; left: var(--space-2); right: var(--space-2); bottom: var(--space-2); width: auto; max-height: 60%; }
   .zx-idbar nav button, .zx-compare, .zx-tech-ex button, .zx-seg button, .zx-zoom button { min-height: 44px; }
 }
 
-/* Large monitors: everything reads a step larger instead of leaving the panels sparse. */
-@media (min-width: 1900px) {
-  html { font-size: 112.5%; }
-  :root { --list-w: 27rem; }
-}

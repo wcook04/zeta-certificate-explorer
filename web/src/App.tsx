@@ -66,26 +66,23 @@ export function App() {
       <a className="zx-skip" href="#intervals">Skip to the intervals</a>
       <header className="zx-head">
         <div className="zx-intro">
-          <div className="zx-titles">
-            <p className="zx-kicker">A reader for the Lean verification of the Riemann hypothesis up to height 10,011</p>
-            <h1>10,156 zero certificates, and how Lean checks them</h1>
-          </div>
+          <p className="zx-kicker">A reader for the Lean verification of the Riemann hypothesis up to height 10,011</p>
+          <h1>10,156 zero certificates, and how Lean checks them</h1>
           <p className="zx-lede">
             Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean proof</a> places a zero of ζ(½ + it) in each of 10,156 short intervals of t,
             by showing that Hardy’s Z function changes sign across the interval. In Python each check is a few lines of arithmetic. Lean’s kernel
             is slow at arithmetic, so a metaprogram writes each certificate’s proof in a form the kernel can check quickly. This page lists every
             certificate with the numbers read from the compiled proof, and for fourteen of them it opens that proof.
           </p>
+          <nav className="zx-starts" aria-label="Places to start">
+            <span className="zx-starts-h">Start with</span>
+            <a href="#/6710"><b>#6,710</b> a C₁ pair near t = 7005</a>
+            <a href="#/53"><b>#53</b> the first Riemann–Siegel certificate</a>
+            <a href="#/1"><b>#1</b> the first, by Euler–Maclaurin</a>
+          </nav>
         </div>
-        <nav className="zx-starts" aria-label="Places to start">
-          <h2>Places to start</h2>
-          <a href="#/6710"><b>#6,710, near t = 7005</b><span>One of a neighbouring pair where both certificates needed the extra C₁ term; 2,850 proof steps</span></a>
-          <a href="#/53"><b>#53, at t = 149.5</b><span>The first Riemann–Siegel certificate; 727 proof steps</span></a>
-          <a href="#/1"><b>#1, from t = 1 to 17.8</b><span>The first certificate, by Euler–Maclaurin; 21,565 proof steps</span></a>
-        </nav>
+        <div className="zx-overview">{rows && <MarginStrip rows={rows} selected={selected} onChoose={choose} height={250} />}</div>
       </header>
-
-      <div className="zx-fig-slot">{rows && <MarginStrip rows={rows} selected={selected} onChoose={choose} />}</div>
 
       {error && <p className="zx-error">Could not load the data: {error}</p>}
 
@@ -241,7 +238,8 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
   useEffect(() => {
     if (!graph || !tree || want) return;
     const t = window.setTimeout(() => {
-      const ids = focus ? [] : tree.nodes.filter((n) => n.value && (n.label === "Z̃ at the left end" || n.label === "Z̃ at the right end" || n.label.startsWith("error bound"))).map((n) => n.id);
+      const top = focus ? [] : tree.nodes.filter((n) => n.value && (n.label === "Z̃ at the left end" || n.label === "Z̃ at the right end" || n.label.startsWith("error bound")));
+      const ids = [...top.map((n) => n.id), ...top.flatMap((n) => n.uses)];
       if (ids.length) view.current?.revealIds(ids);
       window.setTimeout(() => view.current?.fitAll(false), 450);
     }, 120);
@@ -284,21 +282,37 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
       </div>
 
       <header className="zx-cert-head">
-        <h2>A zero between t = {row.left} and t = {row.right}</h2>
-        <p className="zx-conclusion">
-          Z(t) is <span className={row.ends[0].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[0])}</span> at the left end and{" "}
-          <span className={row.ends[1].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[1])}</span> at the right, after allowing for the
-          rounding in the computation and for the error of the approximation. Z is continuous, so it is zero somewhere in between.
-        </p>
+        <div>
+          <h2>A zero between t = {row.left} and t = {row.right}</h2>
+          <p className="zx-conclusion">
+            Z(t) is <span className={row.ends[0].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[0])}</span> at the left end and{" "}
+            <span className={row.ends[1].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[1])}</span> at the right, after allowing for the
+            rounding in the computation and for the error of the approximation. Z is continuous, so it is zero somewhere in between.
+          </p>
+        </div>
+        <dl className="zx-verdict">
+          {row.ends.map((e, i) => (
+            <div key={i} className={e.sign === "+" ? "is-pos" : "is-neg"}>
+              <dt>Z({i === 0 ? row.left : row.right})</dt>
+              <dd><span className="zx-verdict-sign">{e.sign === "+" ? "> 0" : "< 0"}</span><span>in [{e.trueZ[0]}, {e.trueZ[1]}]</span></dd>
+            </div>
+          ))}
+          <p>Smallest distance from 0: <b>{row.marginShort}</b></p>
+        </dl>
       </header>
 
       <section className="zx-block" aria-labelledby="how">
+        <div className="zx-how-intro">
+        <div>
         <h3 id="how" className="zx-section">How Lean checks this certificate</h3>
         <p className="zx-prose">
           In Python the two checks at the end of this page take a few lines and a fraction of a second. Lean’s kernel is slow at arithmetic,
           and the sums get longer with height, so the metaprogram builds the proof in a form the kernel can check quickly.
           {row.detail ? " Four techniques from its source follow, each with its count in this certificate and one place it occurs, which opens in the proof graph." : null}
         </p>
+        </div>
+        {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
+        </div>
         {row.detail ? (
           graph && tree ? (
             <div className="zx-bench">
@@ -357,18 +371,19 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
             </p>
           </div>
         )}
-        {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
       </section>
 
       <section className="zx-block" aria-labelledby="checks">
         <h3 id="checks" className="zx-section">The two checks</h3>
         <div className="zx-checks-fig">
           <SignChart rows={rows} row={row} onChoose={onChoose} />
-          <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
+          <div className="zx-checks-low">
+            <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
+            <Variant row={row} />
+          </div>
           {comparison !== null && neighbours[comparison] && (
             <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
           )}
-          <Variant row={row} />
         </div>
       </section>
     </article>
