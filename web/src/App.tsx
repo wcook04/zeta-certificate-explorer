@@ -16,9 +16,9 @@ type Filter = "all" | "c1" | "detail" | "em";
 
 const FILTERS: { id: Filter; label: string; test: (r: Row) => boolean }[] = [
   { id: "all", label: "All", test: () => true },
-  { id: "detail", label: "Computation shown", test: (r) => !!r.detail },
+  { id: "detail", label: "Proof opened", test: (r) => !!r.detail },
   { id: "c1", label: "Uses C₁", test: (r) => r.variant === "C1" },
-  { id: "em", label: "Euler–Maclaurin", test: (r) => r.method === "EM" },
+  { id: "em", label: "E–M", test: (r) => r.method === "EM" },
 ];
 
 const VARIANT_WORDS: Record<Row["variant"], string> = {
@@ -65,17 +65,24 @@ export function App() {
     <div className="zx">
       <a className="zx-skip" href="#intervals">Skip to the intervals</a>
       <header className="zx-head">
-        <h1>Zero certificates up to height 10,011</h1>
-        <p className="zx-lede">
-          Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean proof</a> that the Riemann hypothesis holds up to height 10,011 uses
-          10,156 certificates. Each one shows that Hardy’s Z function changes sign on a short interval of t, so ζ(½ + it) has a zero there.
-          This page lists every certificate with its numbers read from the compiled proof. For fourteen of them it shows how the
-          certificate metaprogram builds a proof that Lean’s kernel can check quickly, and the proof term itself as a graph.
-        </p>
-        <p className="zx-starts">
-          Places to start: <a href="#/6710">the pair of intervals near t = 7005</a>, where both certificates needed the C₁ term;{" "}
-          <a href="#/53">the first Riemann–Siegel certificate</a>; <a href="#/1">the first certificate</a>, by Euler–Maclaurin.
-        </p>
+        <div className="zx-intro">
+          <div className="zx-titles">
+            <p className="zx-kicker">A reader for the Lean verification of the Riemann hypothesis up to height 10,011</p>
+            <h1>10,156 zero certificates, and how Lean checks them</h1>
+          </div>
+          <p className="zx-lede">
+            Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean proof</a> places a zero of ζ(½ + it) in each of 10,156 short intervals of t,
+            by showing that Hardy’s Z function changes sign across the interval. In Python each check is a few lines of arithmetic. Lean’s kernel
+            is slow at arithmetic, so a metaprogram writes each certificate’s proof in a form the kernel can check quickly. This page lists every
+            certificate with the numbers read from the compiled proof, and for fourteen of them it opens that proof.
+          </p>
+        </div>
+        <nav className="zx-starts" aria-label="Places to start">
+          <h2>Places to start</h2>
+          <a href="#/6710"><b>#6,710, near t = 7005</b><span>One of a neighbouring pair where both certificates needed the extra C₁ term; 2,850 proof steps</span></a>
+          <a href="#/53"><b>#53, at t = 149.5</b><span>The first Riemann–Siegel certificate; 727 proof steps</span></a>
+          <a href="#/1"><b>#1, from t = 1 to 17.8</b><span>The first certificate, by Euler–Maclaurin; 21,565 proof steps</span></a>
+        </nav>
       </header>
 
       <div className="zx-fig-slot">{rows && <MarginStrip rows={rows} selected={selected} onChoose={choose} />}</div>
@@ -87,6 +94,7 @@ export function App() {
           <div className="zx-filters" role="group" aria-label="Which intervals to list">
             {FILTERS.map((f) => (
               <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
+                {f.id === "detail" && <GraphIcon />}
                 {f.label}
                 {rows && <span className="zx-count">{fmt(rows.filter(f.test).length)}</span>}
               </button>
@@ -97,18 +105,18 @@ export function App() {
 
         <section className="zx-detail" aria-label="The selected interval">
           {current && rows ? <Detail key={current.row} rows={rows} manifest={manifest} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} /> : <p className="zx-loading">Loading the certificates…</p>}
+          <footer className="zx-foot">
+            <p>
+              The proof, its Lean and its data are Salvatore Mercuri and Bhavik Mehta’s (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0), built
+              here at commit {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} with {manifest?.provenance.toolchain ?? "Lean"}. A program read every
+              number on this page from the compiled proof and rounded it outward, so no interval is printed narrower and no margin larger than
+              the proof gives. Will Cook made the program and this page with AI, and the authors have not reviewed either.{" "}
+              <a href="https://github.com/wcook04/zeta-certificate-explorer">How it was made</a>.
+            </p>
+          </footer>
         </section>
       </main>
 
-      <footer className="zx-foot">
-        <p>
-          The proof, its Lean and its data are Salvatore Mercuri and Bhavik Mehta’s (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0), built here
-          at commit {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} with {manifest?.provenance.toolchain ?? "Lean"}. A program read every number
-          on this page from the compiled proof and rounded it outward, so no interval is printed narrower and no margin larger than the proof
-          gives. Will Cook made the program and this page with AI, and the authors have not reviewed either.{" "}
-          <a href="https://github.com/wcook04/zeta-certificate-explorer">How it was made</a>.
-        </p>
-      </footer>
     </div>
   );
 }
@@ -132,6 +140,9 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
     const y = i * ROW_H;
     if (y < el.scrollTop || y > el.scrollTop + el.clientHeight - ROW_H) el.scrollTop = Math.max(0, y - el.clientHeight / 3);
   }, [selected, rows]);
+  const at = selected == null ? -1 : rows.findIndex((r) => r.row === selected);
+  const away = at >= 0 && (at * ROW_H < top - ROW_H / 2 || at * ROW_H > top + height - ROW_H / 2) ? (at * ROW_H < top ? "up" : "down") : null;
+  const back = () => { const el = box.current; if (el) el.scrollTo({ top: Math.max(0, at * ROW_H - el.clientHeight / 3), behavior: "smooth" }); };
   const first = Math.max(0, Math.floor(top / ROW_H) - 10);
   const last = Math.min(rows.length, Math.ceil((top + height) / ROW_H) + 10);
   return (
@@ -141,7 +152,9 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
         <span role="columnheader">Interval of t</span>
         <span role="columnheader">Formula</span>
         <span role="columnheader" title="How far |Z̃| exceeds the error bound at the tighter end, rounded down">Margin</span>
+        <span role="columnheader" aria-label="Proof opened" />
       </div>
+      {selected != null && at < 0 && <p className="zx-away">#{fmt(selected)} is open but hidden by this filter.</p>}
       <div className="zx-scroll" ref={box} onScroll={(e) => setTop(e.currentTarget.scrollTop)}>
         <div style={{ height: rows.length * ROW_H, position: "relative" }}>
           {rows.slice(first, last).map((r, k) => {
@@ -150,24 +163,32 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
                 key={r.row}
                 type="button"
                 role="row"
-                className={`zx-tr${r.row === selected ? " is-selected" : ""}${r.variant === "C1" ? " is-c1" : ""}`}
+                className={`zx-tr is-${r.variant.toLowerCase()}${r.row === selected ? " is-selected" : ""}`}
                 style={{ top: (first + k) * ROW_H }}
                 aria-current={r.row === selected ? "true" : undefined}
                 onClick={() => onChoose(r.row)}
               >
                 <span className="zx-num">{fmt(r.row)}</span>
                 <span className="zx-t">[{r.left}, {r.right}]</span>
-                <span>{VARIANT_SHORT[r.variant]}</span>
-                <span className="zx-num">
-                  {r.marginShort ?? minDecimal(r.ends[0].margin, r.ends[1].margin)}
-                  {r.detail && <span className="zx-dot" title="The computation is shown" aria-label="computation shown" />}
-                </span>
+                <span className="zx-formula">{VARIANT_SHORT[r.variant]}</span>
+                <span className="zx-num">{r.marginShort ?? minDecimal(r.ends[0].margin, r.ends[1].margin)}</span>
+                <span className="zx-has">{r.detail && <GraphIcon label="proof opened" />}</span>
               </button>
             );
           })}
         </div>
       </div>
+      {away && <button type="button" className="zx-back" onClick={back}>{away === "up" ? "↑" : "↓"} Back to #{fmt(selected!)}</button>}
     </div>
+  );
+}
+
+function GraphIcon({ label }: { label?: string }) {
+  return (
+    <svg className="zx-gicon" viewBox="0 0 12 12" width="12" height="12" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
+      <path d="M6 2.5V6M6 6L2.5 9.5M6 6l3.5 3.5" />
+      <circle cx="6" cy="2.2" r="1.7" /><circle cx="2.2" cy="9.8" r="1.7" /><circle cx="9.8" cy="9.8" r="1.7" />
+    </svg>
   );
 }
 
@@ -218,94 +239,139 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
   // On opening the whole certificate, unfold to the two endpoint values and the error bound, so the
   // first picture already holds the numbers the certificate is about; then frame everything drawn.
   useEffect(() => {
-    if (!graph || !tree) return;
+    if (!graph || !tree || want) return;
     const t = window.setTimeout(() => {
       const ids = focus ? [] : tree.nodes.filter((n) => n.value && (n.label === "Z̃ at the left end" || n.label === "Z̃ at the right end" || n.label.startsWith("error bound"))).map((n) => n.id);
       if (ids.length) view.current?.revealIds(ids);
       window.setTimeout(() => view.current?.fitAll(false), 450);
     }, 120);
     return () => window.clearTimeout(t);
-  }, [graph, tree, focus]);
+  }, [graph, tree, focus]); // eslint-disable-line react-hooks/exhaustive-deps
   const jumpCards = tree ? [
     { label: "Left approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the left end") },
     { label: "Right approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the right end") },
     { label: "Error bound", card: tree.nodes.find((n) => n.value && n.label.startsWith("error bound")) },
   ].filter((x) => !!x.card) : [];
 
+  // A technique's example: draw the branch that reaches that step, frame it and open its statement.
+  const [want, setWant] = useState<string | null>(null);
+  const showExample = useCallback((id: string) => {
+    if (focus) { setFocus(null); setWant(id); return; }
+    const drawn = view.current?.focusIds([id], { exclusive: true });
+    if (!drawn) setFocus(id);
+    setCard(id);
+    mapBox.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [focus]);
+  useEffect(() => {
+    if (!want || focus || !graph) return;
+    const t = window.setTimeout(() => { showExample(want); setWant(null); }, 700);
+    return () => window.clearTimeout(t);
+  }, [want, focus, graph, showExample]);
+
   const sign = (e: Row["ends"][number]) => (e.sign === "+" ? "positive" : "negative");
   return (
-    <div className="zx-cert">
-      <div className="zx-row-nav">
-        <span>Certificate {fmt(row.row)} of 10,156, {VARIANT_WORDS[row.variant]}</span>
-        <nav aria-label="Neighbouring intervals">
-          {previous && <button type="button" onClick={() => onChoose(previous.row)}>← {fmt(previous.row)}</button>}
-          {next && <button type="button" onClick={() => onChoose(next.row)}>{fmt(next.row)} →</button>}
+    <article className="zx-cert">
+      <div className="zx-idbar">
+        <p>
+          <b>Certificate #{fmt(row.row)}</b>
+          <span className={`zx-chip is-${row.variant.toLowerCase()}`}>{VARIANT_WORDS[row.variant]}</span>
+          <span className="zx-idbar-t">t ∈ [{row.left}, {row.right}]</span>
+        </p>
+        <nav aria-label="Neighbouring certificates">
+          {previous && <button type="button" onClick={() => onChoose(previous.row)} aria-label={`Previous certificate, ${fmt(previous.row)}`}>← #{fmt(previous.row)}</button>}
+          {next && <button type="button" onClick={() => onChoose(next.row)} aria-label={`Next certificate, ${fmt(next.row)}`}>#{fmt(next.row)} →</button>}
         </nav>
       </div>
-      <h2>A zero between t = {row.left} and t = {row.right}</h2>
-      <p className="zx-conclusion">
-        Z(t) is {sign(row.ends[0])} at the left end and {sign(row.ends[1])} at the right, after allowing for the rounding in the computation and
-        for the error of the approximation. Z is continuous, so it is zero somewhere in between.
-      </p>
-      <h3 className="zx-section">How Lean checks this certificate</h3>
-      <p className="zx-variant">
-        In Python the two checks below take a few lines and a fraction of a second. Lean’s kernel is slow at arithmetic, and the sums
-        get longer with height, so the metaprogram builds the proof in a form the kernel can check quickly. Four of the techniques in its
-        source are below, each with its count in this certificate.
-      </p>
-      {row.detail ? (
-        graph && tree ? (
-          <div className="zx-work">
-            <Metaprogram tree={tree} />
-            {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
-            <h4 className="zx-sub">The proof term, as a graph</h4>
-            <style>{sealedCss}</style>
-            <div className="zx-map" ref={mapBox} onPointerMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPointer([e.clientX - r.left, e.clientY - r.top]); }} onPointerLeave={() => setHover(null)}>
-              <div className="zx-map-head">
-                <div className="zx-map-jumps" role="group" aria-label="Start the graph from one quantity">
-                  <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
-                  {jumpCards.map(({ label, card: target }) => <button key={label} type="button" aria-pressed={focus === target!.id} onClick={() => { setFocus(target!.id); setCard(target!.id); }}>{label}</button>)}
-                </div>
-                <p className="zx-map-note">Hover a card for how Lean got its value, click it for the full statement, and use the arrow under it to open its inputs. Drag to move; pinch or Ctrl-scroll to zoom.</p>
-              </div>
-              <ArgumentTree
-                key={`${tree.row}:${focus ?? tree.root}`}
-                ref={view}
-                graph={graph}
-                goal={focus ?? tree.root}
-                insets={INSETS}
-                persist={false}
-                mode="steps"
-                oneCardEach
-                fitMax={window.innerWidth >= 2000 ? 2 : 1.4}
-                rootLabel={focus ? byId.get(focus)?.label : `Certificate ${fmt(tree.row)}`}
-                selected={card ?? undefined}
-                onSelect={setCard}
-                onHover={setHover}
-                onTrace={noTrace}
-              />
-              {hover && hover !== card && byId.get(hover) && <HoverCard card={byId.get(hover)!} at={pointer} />}
-              {card && byId.get(card) && <Inspector card={byId.get(card)!} onClose={() => setCard(null)} />}
-            </div>
-          </div>
-        ) : (
-          <p className={treeError ? "zx-error" : "zx-loading"}>{treeError ? `Could not load the computation: ${treeError}.` : "Loading the computation…"}</p>
-        )
-      ) : (
-        <p className="zx-nodetail">
-          The computation has been extracted for fourteen certificates so far, and this is not one of them. The numbers above come from this
-          certificate in the compiled proof. To see a computation, open <a href="#/6710">certificate 6,710</a>,{" "}
-          <a href="#/53">certificate 53</a> or <a href="#/1">certificate 1</a>, or list all fourteen with the “Computation shown” filter.
+
+      <header className="zx-cert-head">
+        <h2>A zero between t = {row.left} and t = {row.right}</h2>
+        <p className="zx-conclusion">
+          Z(t) is <span className={row.ends[0].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[0])}</span> at the left end and{" "}
+          <span className={row.ends[1].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[1])}</span> at the right, after allowing for the
+          rounding in the computation and for the error of the approximation. Z is continuous, so it is zero somewhere in between.
         </p>
-      )}
-      <h3 className="zx-section">The two checks</h3>
-      <SignChart rows={rows} row={row} onChoose={onChoose} />
-      <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
-      {comparison !== null && neighbours[comparison] && (
-        <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
-      )}
-      <Variant row={row} />
-    </div>
+      </header>
+
+      <section className="zx-block" aria-labelledby="how">
+        <h3 id="how" className="zx-section">How Lean checks this certificate</h3>
+        <p className="zx-prose">
+          In Python the two checks at the end of this page take a few lines and a fraction of a second. Lean’s kernel is slow at arithmetic,
+          and the sums get longer with height, so the metaprogram builds the proof in a form the kernel can check quickly.
+          {row.detail ? " Four techniques from its source follow, each with its count in this certificate and one place it occurs, which opens in the proof graph." : null}
+        </p>
+        {row.detail ? (
+          graph && tree ? (
+            <div className="zx-bench">
+              <Metaprogram tree={tree} onShow={showExample} />
+              <div className="zx-bench-graph">
+                <style>{sealedCss}</style>
+                <div className="zx-map" ref={mapBox} onPointerMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPointer([e.clientX - r.left, e.clientY - r.top]); }} onPointerLeave={() => setHover(null)}>
+                  <div className="zx-map-head">
+                    <h4>The proof term, as a graph</h4>
+                    <div className="zx-map-tools">
+                      <div className="zx-seg" role="group" aria-label="Start the graph from one quantity">
+                        <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
+                        {jumpCards.map(({ label, card: target }) => <button key={label} type="button" aria-pressed={focus === target!.id} onClick={() => { setFocus(target!.id); setCard(target!.id); }}>{label}</button>)}
+                      </div>
+                      <div className="zx-zoom" role="group" aria-label="Zoom">
+                        <button type="button" onClick={() => view.current?.zoomBy(1 / 1.25)} aria-label="Zoom out">−</button>
+                        <button type="button" onClick={() => view.current?.fitAll(true)}>Fit</button>
+                        <button type="button" onClick={() => view.current?.zoomBy(1.25)} aria-label="Zoom in">+</button>
+                      </div>
+                    </div>
+                  </div>
+                  <ArgumentTree
+                    key={`${tree.row}:${focus ?? tree.root}`}
+                    ref={view}
+                    graph={graph}
+                    goal={focus ?? tree.root}
+                    insets={INSETS}
+                    persist={false}
+                    mode="steps"
+                    oneCardEach
+                    fitMax={1.5}
+                    rootLabel={focus ? byId.get(focus)?.label : `Certificate ${fmt(tree.row)}`}
+                    selected={card ?? undefined}
+                    onSelect={setCard}
+                    onHover={setHover}
+                    onTrace={noTrace}
+                  />
+                  {hover && hover !== card && byId.get(hover) && <HoverCard card={byId.get(hover)!} at={pointer} />}
+                  {card && byId.get(card) && <Inspector card={byId.get(card)!} onClose={() => setCard(null)} />}
+                  <p className="zx-map-note">Hover a card for how Lean reached its value; click it for the full statement; the arrow under a card opens its inputs. Drag to move, pinch or Ctrl-scroll to zoom. A second outline marks a lemma cited more than once.</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className={treeError ? "zx-error" : "zx-loading"}>{treeError ? `Could not load the computation: ${treeError}.` : "Loading the computation…"}</p>
+          )
+        ) : (
+          <div className="zx-nodetail">
+            <p>
+              The proof has been opened for fourteen certificates so far, and #{fmt(row.row)} is not one of them. Its numbers below come from
+              this certificate in the compiled proof.
+            </p>
+            <p>
+              Open <a href="#/6710">#6,710</a> (Riemann–Siegel with C₁), <a href="#/53">#53</a> (Riemann–Siegel) or <a href="#/1">#1</a>{" "}
+              (Euler–Maclaurin), or list all fourteen with the “Proof opened” filter.
+            </p>
+          </div>
+        )}
+        {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
+      </section>
+
+      <section className="zx-block" aria-labelledby="checks">
+        <h3 id="checks" className="zx-section">The two checks</h3>
+        <div className="zx-checks-fig">
+          <SignChart rows={rows} row={row} onChoose={onChoose} />
+          <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
+          {comparison !== null && neighbours[comparison] && (
+            <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
+          )}
+          <Variant row={row} />
+        </div>
+      </section>
+    </article>
   );
 }
 

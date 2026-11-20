@@ -24,7 +24,7 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
   const [width, setWidth] = useState(800);
   const [hover, setHover] = useState<Pt | null>(null);
   const [scheme, setScheme] = useState(0);
-  const height = 180;
+  const height = 168;
 
   const pts = useMemo<Pt[]>(() => rows.map((r) => ({
     row: r.row,
@@ -85,7 +85,16 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
     if (sel) {
       g.strokeStyle = token("--ink");
       g.lineWidth = 1.5;
-      g.beginPath(); g.arc(sx(sel.x), sy(sel.y), 6, 0, 7); g.stroke();
+      g.beginPath(); g.arc(sx(sel.x), sy(sel.y), 7, 0, 7); g.stroke();
+      const label = `#${sel.row.toLocaleString("en-GB")}`;
+      g.font = `600 13px ${token("--font-sans")}`;
+      const right = sx(sel.x) > width - 90;
+      g.textAlign = right ? "right" : "left"; g.textBaseline = "middle";
+      g.lineWidth = 4; g.strokeStyle = token("--surface"); g.lineJoin = "round";
+      const lx = sx(sel.x) + (right ? -12 : 12), ly = sy(sel.y);
+      g.strokeText(label, lx, ly);
+      g.fillStyle = token("--ink");
+      g.fillText(label, lx, ly);
     }
   }, [pts, width, selected, scheme]);
 
@@ -127,9 +136,13 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
         )}
       </div>
       <figcaption>
-        Each dot is one certificate: across, its interval’s height t; up, on a log scale, how far |Z̃| exceeds the error bound at the
-        tighter end. <span className="zx-key zx-key--c1" aria-hidden="true" /> The 74 certificates that use the C₁ term.{" "}
-        <span className="zx-key zx-key--em" aria-hidden="true" /> The 52 Euler–Maclaurin certificates below t = 149.5. Click a dot to open it.
+        <span><b>All 10,156 certificates.</b> Across: the interval’s height t. Up, on a log scale: how far |Z̃| clears the error bound at the
+        tighter end. Click a dot to open it.</span>
+        <span className="zx-legend">
+          <span><i className="zx-key zx-key--em" /> Euler–Maclaurin, 52</span>
+          <span><i className="zx-key zx-key--rs" /> Riemann–Siegel, 10,030</span>
+          <span><i className="zx-key zx-key--c1" /> Riemann–Siegel with C₁, 74</span>
+        </span>
       </figcaption>
     </figure>
   );

@@ -1,310 +1,295 @@
-/* The explorer's own layout. Colours, type and spacing are Proof Reader's tokens
-   (styles/tokens.css); the map keeps its own stylesheet (map/tree.css). */
+/* The explorer's own layout, written once (20 November, late). Colours, type and spacing are
+   Proof Reader's tokens (styles/tokens.css); the map keeps its own stylesheet (map/tree.css).
 
-html, body, #root { height: 100%; }
-body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font-sans); }
+   Colour roles, each used for one meaning only:
+     method     E–M = --lit (amber), R–S = --ink-3, R–S with C₁ = --formal (violet)
+     sign       positive = --pos (teal), negative = --neg (red)
+     selection  --ink: a bar, a ring, an outline; never a method colour
+     proof opened  a small graph glyph, never a colour */
 
-.zx { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; }
-.zx a { color: var(--formal); }
-
-.zx-head { padding: var(--space-5) var(--space-6) var(--space-3); max-width: 78rem; }
-.zx-head h1 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h1); margin: 0 0 var(--space-2); line-height: var(--lh-tight); }
-.zx-lede { font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); max-width: 62rem; margin: 0; color: var(--ink-2); }
-
-.zx-main { display: grid; grid-template-columns: minmax(24rem, 29rem) minmax(0, 1fr); gap: var(--space-4); padding: var(--space-3) var(--space-6) var(--space-4); min-height: 0; height: calc(100vh - 11.5rem); }
-
-.zx-table { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
-.zx-filters { display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-2); border-bottom: 1px solid var(--rule); }
-.zx-filters button { font: inherit; font-size: var(--fs-ui); padding: 0.3rem 0.65rem; border: 1px solid var(--rule-control); border-radius: 999px; background: var(--raised); color: var(--ink); cursor: pointer; }
-.zx-filters button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
-.zx-count { margin-left: 0.4rem; font-variant-numeric: tabular-nums; opacity: 0.7; }
-
-.zx-grid { display: flex; flex-direction: column; min-height: 0; flex: 1; }
-.zx-tr { display: grid; grid-template-columns: 3.2rem minmax(10.2rem, 1fr) 6.7rem 4rem; align-items: center; gap: var(--space-2); padding: 0 var(--space-3); height: 34px; box-sizing: border-box; font-size: var(--fs-ui); }
-.zx-th { white-space: nowrap; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--ink-3); border-bottom: 1px solid var(--rule); }
-.zx-scroll { overflow-y: auto; flex: 1; min-height: 0; }
-.zx-scroll .zx-tr { position: absolute; left: 0; right: 0; width: 100%; border: 0; border-bottom: 1px solid color-mix(in oklab, var(--rule) 55%, transparent); background: none; color: inherit; font: inherit; font-size: var(--fs-ui); text-align: left; cursor: pointer; }
-.zx-scroll .zx-tr:hover { background: var(--sunk); }
-.zx-scroll .zx-tr.is-selected { background: var(--lit-wash); box-shadow: inset 3px 0 0 var(--lit); }
-.zx-scroll .zx-tr.is-c1 span:nth-child(3) { color: var(--formal); font-weight: 600; }
-.zx-num { font-variant-numeric: tabular-nums; text-align: right; }
-.zx-t { font-family: var(--font-mono); font-size: var(--fs-sm); white-space: nowrap; }
-.zx-dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--lit); margin-left: 0.4rem; vertical-align: middle; }
-
-.zx-detail { min-height: 0; overflow-y: auto; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); padding: var(--space-4) var(--space-5); }
-.zx-cert { display: flex; flex-direction: column; gap: var(--space-3); min-height: 100%; }
-.zx-cert h2, .zx-welcome h2 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); margin: 0; }
-.zx-welcome p, .zx-variant, .zx-nodetail { font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); max-width: 52rem; margin: 0; color: var(--ink-2); }
-.zx-starts { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
-.zx-starts button { font: inherit; font-size: var(--fs-base); text-align: left; background: var(--raised); border: 1px solid var(--rule-control); border-radius: var(--radius-s); padding: var(--space-2) var(--space-3); color: var(--ink); cursor: pointer; }
-
-.zx-ends { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--fs-base); }
-.zx-ends th, .zx-ends td { padding: 0.35rem 0.9rem 0.35rem 0; text-align: left; border-bottom: 1px solid var(--rule); }
-.zx-ends thead th { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--ink-3); font-weight: 600; }
-.zx-ends td { font-family: var(--font-mono); font-size: var(--fs-sm); }
-.zx-ends td.is-neg strong { color: var(--fail); font-family: var(--font-sans); }
-.zx-ends td.is-pos strong { color: var(--formal); font-family: var(--font-sans); }
-.zx-at { font-family: var(--font-sans); color: var(--ink-3); }
-
-.zx-work { display: grid; grid-template-columns: 1fr; gap: var(--space-3); flex: 1; min-height: max(36rem, 72vh); }
-.zx-map { position: relative; display: flex; flex-direction: column; min-height: max(36rem, 72vh); border: 1px solid var(--rule); border-radius: var(--radius-s); background: var(--ground); overflow: hidden; }
-.zx-map > .tree { flex: 1; min-height: 0; position: relative; }
-.zx-map-note { margin: 0; padding: var(--space-2) var(--space-3); font-size: var(--fs-sm); color: var(--ink-2); border-bottom: 1px solid var(--rule); background: var(--surface); }
-
-.zx-inspect { border: 1px solid var(--rule); border-radius: var(--radius-s); padding: var(--space-3); overflow-y: auto; max-height: 40rem; font-size: var(--fs-ui); background: var(--raised); }
-.zx-inspect--empty { color: var(--ink-3); }
-.zx-inspect h3 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: 0 0 var(--space-2); }
-.zx-inspect h4 { font-size: var(--fs-sm); margin: var(--space-3) 0 var(--space-1); }
-.zx-inspect code, .zx-example { font-family: var(--font-mono); font-size: var(--fs-xs); }
-.zx-subject code { word-break: break-word; }
-.zx-value b { font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-sm); }
-.zx-steps, .zx-checks { padding-left: 1.2rem; margin: var(--space-1) 0; }
-.zx-example { white-space: pre-wrap; word-break: break-all; background: var(--sunk); padding: var(--space-2); border-radius: var(--radius-s); max-height: 14rem; overflow: auto; }
-details summary { cursor: pointer; color: var(--formal); margin-top: var(--space-2); }
-
-.zx-foot { padding: var(--space-3) var(--space-6) var(--space-5); font-size: var(--fs-sm); color: var(--ink-3); max-width: 78rem; line-height: var(--lh-ui); }
-.zx-error { color: var(--fail); padding: 0 var(--space-6); }
-
-@media (min-width: 1680px) {
-  .zx-work { grid-template-columns: 1fr 20rem; }
-}
-.zx-inspect { max-height: none; }
-@media (min-width: 1680px) { .zx-inspect { max-height: max(36rem, 72vh); } }
-@media (max-width: 820px) {
-  .zx-head, .zx-main, .zx-foot { padding-left: var(--space-4); padding-right: var(--space-4); }
-  .zx-main { grid-template-columns: 1fr; height: auto; }
-  .zx-table { height: 60vh; }
-  .zx-main { grid-template-columns: minmax(0, 1fr); }
-  .zx-tr { grid-template-columns: 3rem minmax(0, 1fr) 3.4rem; font-size: var(--fs-sm); padding: 0 var(--space-2); }
-  .zx-tr > :nth-child(3) { display: none; }
-  .zx-scroll .zx-tr.is-c1 .zx-t { color: var(--formal); font-weight: 600; }
-  .zx-t { font-size: var(--fs-xs); }
-  .zx-detail { padding: var(--space-3); }
-  .zx-head h1 { font-size: var(--fs-h2); }
-  .zx-ends { font-size: var(--fs-sm); display: block; overflow-x: auto; }
+:root {
+  --pos: var(--rel-formalizes-lit);
+  --neg: var(--fail);
+  --gutter: clamp(16px, 2.2vw, 40px);
+  --list-w: 26rem;
+  --prose: 66ch;
 }
 
-/* Large monitors: the whole page reads larger rather than leaving the panels sparse. */
-@media (min-width: 2000px) {
-  html { font-size: 118.75%; }
-  .zx-head, .zx-foot { max-width: 96rem; }
-  .zx-lede { max-width: 80rem; }
-  .zx-main { grid-template-columns: minmax(26rem, 32rem) 1fr; }
-}
-
-/* Endpoint checks come before graph traversal. This layer leaves the map engine untouched. */
-.zx-row-nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-size: var(--fs-sm); color: var(--ink-2); }
-.zx-row-nav nav { display: flex; gap: var(--space-2); }
-.zx-row-nav button, .zx-map-jumps button { font: inherit; color: var(--ink); background: var(--raised); border: 1px solid var(--rule-control); border-radius: var(--radius-s); padding: 0.35rem 0.6rem; cursor: pointer; }
-.zx-conclusion { margin: 0; max-width: 52rem; font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); }
-.zx-end-wrap { overflow-x: auto; min-width: 0; }
-.zx-ends { width: 100%; }
-.zx-ends td, .zx-ends th { vertical-align: top; }
-.zx-ends td { white-space: nowrap; }
-.zx-range { display: block; margin-top: var(--space-1); }
-.zx-end-caption { margin: var(--space-2) 0 0; color: var(--ink-3); font-size: var(--fs-sm); line-height: var(--lh-ui); }
-.zx-compare { display: block; padding: 0; border: 0; margin-top: var(--space-1); background: none; text-align: left; text-decoration: underline; text-underline-offset: 0.18em; color: var(--formal); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
-.zx-comparison { border-left: 3px solid var(--lit); padding: var(--space-3); background: var(--sunk); }
-.zx-comparison h3 { font-family: var(--font-serif); font-size: var(--fs-h3); font-weight: 500; color: var(--ink); margin: 0; }
-.zx-comparison p { font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--ink-2); }
-.zx-map-jumps { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--rule); }
-.zx-map-jumps button { font-size: var(--fs-sm); }
-.zx-map-jumps button[aria-pressed="true"] { color: var(--ground); background: var(--ink); }
-.zx-cert > .zx-error { padding: 0; }
-.zx button:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
-@media (max-width: 820px) {
-  .zx-row-nav button, .zx-map-jumps button, .zx-compare { min-height: 44px; }
-  .zx-ends { display: table; }
-  .zx-comparison { padding: var(--space-2); }
-  .zx-main { gap: var(--space-3); }
-}
-
-
-/* Design pass, 20 November: one figure from the data, text-face numbers, sentence-case labels. */
-.zx-skip { position: absolute; left: var(--space-4); top: -3rem; padding: var(--space-2) var(--space-3); background: var(--ink); color: var(--ground); border-radius: var(--radius-s); z-index: 10; }
+html, body, #root { min-height: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+.zx { max-width: 2200px; margin: 0 auto; }
+.zx a { color: var(--formal); text-underline-offset: 0.18em; }
+.zx code { font-family: var(--font-mono); font-size: 0.86em; }
+.zx button { font: inherit; }
+.zx button:focus-visible, .zx a:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.zx-skip { position: absolute; left: var(--space-4); top: -3rem; padding: var(--space-2) var(--space-3); background: var(--ink); border-radius: var(--radius-s); z-index: 20; }
+.zx a.zx-skip { color: var(--ground); }
 .zx-skip:focus-visible { top: var(--space-2); }
-.zx-head { padding-bottom: var(--space-2); }
-.zx-head h1 { letter-spacing: -0.01em; text-wrap: balance; }
-.zx-lede { max-width: 62ch; text-wrap: pretty; }
-.zx-conclusion, .zx-variant, .zx-map-note, .zx-nodetail, .zx-welcome p { max-width: 68ch; text-wrap: pretty; }
-.zx-foot p { max-width: 96ch; }
+.zx-mono { font-variant-numeric: tabular-nums; }
+.zx-pos { color: var(--pos); font-weight: 600; }
+.zx-neg { color: var(--neg); font-weight: 600; }
 
-/* numbers in the text face, aligned; monospace only for Lean */
-.zx-t, .zx-ends td, .zx-range, .zx-value b, .zx-num { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
-.zx-t { font-size: var(--fs-ui); }
-.zx-ends td { font-size: var(--fs-ui); }
+/* ---- header ---------------------------------------------------------------------------- */
+.zx-head {
+  display: grid; grid-template-columns: minmax(0, 44rem) minmax(0, 1fr); gap: var(--space-5) var(--space-8);
+  align-items: end; padding: var(--space-7) var(--gutter) var(--space-5);
+}
+.zx-intro { display: contents; }
+.zx-titles { grid-column: 1 / -1; }
+.zx-kicker { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); letter-spacing: 0.01em; }
+.zx-head h1 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-display); line-height: var(--lh-tight); letter-spacing: -0.015em; margin: 0 0 var(--space-4); max-width: 30ch; text-wrap: balance; }
+.zx-lede { font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); color: var(--ink-2); max-width: var(--prose); margin: 0; text-wrap: pretty; }
+.zx-starts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); align-items: stretch; }
+.zx-starts h2 { grid-column: 1 / -1; margin: 0 0 var(--space-1); font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); }
+.zx-starts a {
+  display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); text-decoration: none; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-m);
+  transition: border-color var(--t-hover) var(--ease-out), background var(--t-hover) var(--ease-out);
+}
+.zx-starts a:hover { border-color: var(--rule-control); background: var(--raised); }
+.zx-starts b { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h4); font-variant-numeric: tabular-nums; }
+.zx-starts span { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); }
 
-/* sentence-case column labels instead of tracked capitals */
-.zx-th, .zx-ends thead th { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); }
-
-/* the figure */
-.zx-fig { margin: 0 var(--space-6) var(--space-2); padding: var(--space-3) var(--space-4) var(--space-2); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
+/* ---- the overview of all certificates ------------------------------------------------- */
+.zx-fig-slot { min-height: calc(168px + 4.5rem); padding: 0 var(--gutter); }
+.zx-fig { margin: 0; padding: var(--space-3) var(--space-4) var(--space-3); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
 .zx-fig-plot { position: relative; }
-.zx-fig canvas { display: block; cursor: default; }
+.zx-fig canvas { display: block; }
 .zx-fig canvas.is-pointing { cursor: pointer; }
-.zx-fig-tip { position: absolute; transform: translateX(-50%); pointer-events: none; background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); padding: 0.3rem 0.55rem; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--card-shadow); }
-.zx-fig figcaption { font-size: var(--fs-sm); color: var(--ink-2); line-height: var(--lh-ui); max-width: 110ch; margin-top: var(--space-1); }
-.zx-key { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; vertical-align: baseline; margin-left: 0.25rem; }
+.zx-fig-tip { position: absolute; transform: translateX(-50%); pointer-events: none; background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); padding: 0.3rem 0.55rem; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--card-shadow); z-index: 3; }
+.zx-fig figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-5); margin-top: var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); }
+.zx-fig figcaption b { color: var(--ink); font-weight: 600; }
+.zx-fig figcaption > span:first-child { max-width: 78ch; }
+.zx-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); }
+.zx-legend > span { white-space: nowrap; }
+.zx-key { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; vertical-align: -0.02em; margin-right: 0.15rem; }
 .zx-key--c1 { background: var(--formal); }
 .zx-key--em { background: var(--lit); }
-.zx-main { height: calc(100vh - 3.5rem); min-height: 34rem; }
-@media (max-width: 820px) {
-  .zx-fig { margin: 0 var(--space-4) var(--space-2); padding: var(--space-2); }
-  .zx-main { height: auto; }
+.zx-key--rs { background: var(--ink-3); }
+
+/* ---- main: the list beside the open certificate -------------------------------------- */
+.zx-main { display: grid; grid-template-columns: var(--list-w) minmax(0, 1fr); gap: var(--space-5); align-items: start; padding: var(--space-5) var(--gutter) var(--space-7); }
+
+.zx-table { position: sticky; top: var(--space-4); height: calc(100vh - 2 * var(--space-4)); display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); overflow: hidden; }
+.zx-filters { display: flex; flex-wrap: wrap; gap: 5px; padding: var(--space-3) var(--space-2); border-bottom: 1px solid var(--rule); }
+.zx-filters button { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 30px; font-size: var(--fs-sm); padding: 0 0.6rem; border: 1px solid var(--rule-control); border-radius: 999px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.zx-filters button:hover { color: var(--ink); }
+.zx-filters button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.zx-count { font-variant-numeric: tabular-nums; }
+.zx-filters button[aria-pressed="false"] .zx-count { color: var(--ink-2); }
+
+.zx-grid { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.zx-tr { display: grid; grid-template-columns: 3.4rem minmax(9.5rem, 1fr) 4.4rem 3.4rem 1rem; align-items: center; gap: var(--space-2); padding: 0 var(--space-3); height: 34px; box-sizing: border-box; font-size: var(--fs-ui); }
+.zx-th { font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.zx-th > :nth-child(1), .zx-th > :nth-child(4) { text-align: right; }
+.zx-scroll { overflow-y: auto; flex: 1; min-height: 0; overscroll-behavior: contain; }
+.zx-scroll .zx-tr { position: absolute; left: 0; right: 0; width: 100%; border: 0; border-bottom: 1px solid color-mix(in oklab, var(--rule) 55%, transparent); background: none; color: var(--ink); text-align: left; cursor: pointer; }
+.zx-scroll .zx-tr:hover { background: var(--sunk); }
+.zx-scroll .zx-tr.is-selected { background: var(--raised); box-shadow: inset 3px 0 0 var(--ink), inset 0 0 0 1px var(--rule-strong); font-weight: 600; }
+.zx-num { font-variant-numeric: tabular-nums; text-align: right; }
+.zx-t { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.zx-formula { font-size: var(--fs-sm); color: var(--ink-3); }
+.zx-tr.is-em .zx-formula { color: var(--lit); }
+.zx-tr.is-c1 .zx-formula { color: var(--formal); font-weight: 600; }
+.zx-has { display: flex; justify-content: center; color: var(--ink-2); }
+.zx-gicon { fill: none; stroke: currentColor; stroke-width: 1.2; flex: none; }
+.zx-gicon circle { fill: var(--surface); }
+.zx-filters button[aria-pressed="true"] .zx-gicon circle { fill: var(--ink); }
+.zx-away { margin: 0; padding: var(--space-2) var(--space-3); font-size: var(--fs-sm); color: var(--ink-2); background: var(--sunk); border-bottom: 1px solid var(--rule); }
+.zx-back { position: absolute; left: 50%; bottom: var(--space-3); transform: translateX(-50%); z-index: 2; padding: 0.4rem 0.9rem; border: 1px solid var(--rule-strong); border-radius: 999px; background: var(--ink); color: var(--ground); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; box-shadow: var(--card-shadow-lift); white-space: nowrap; }
+
+/* ---- the open certificate ------------------------------------------------------------- */
+.zx-detail { min-width: 0; container-type: inline-size; container-name: detail; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
+.zx-cert { display: flex; flex-direction: column; min-width: 0; }
+.zx-idbar {
+  position: sticky; top: 0; z-index: 8; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-6); border-bottom: 1px solid var(--rule); border-radius: var(--radius-m) var(--radius-m) 0 0;
+  background: color-mix(in oklab, var(--surface) 92%, transparent); backdrop-filter: blur(8px);
 }
-.zx a.zx-skip { color: var(--ground); }
-.zx-fig-slot { min-height: calc(220px + 5.6rem); }
-.zx-fig figcaption { max-width: 78ch; }
-@media (max-width: 820px) { .zx-fig-slot { min-height: calc(220px + 9rem); } }
-.zx-foot p { max-width: 78ch; }
-.zx-fig figcaption { max-width: 64ch; }
-.zx-foot p { max-width: 66ch; }
-.zx-conclusion, .zx-variant, .zx-map-note, .zx-nodetail, .zx-welcome p { max-width: 64ch; }
+.zx-idbar p { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-3); font-size: var(--fs-ui); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.zx-idbar b { color: var(--ink); font-size: var(--fs-base); }
+.zx-idbar nav { display: flex; gap: var(--space-2); }
+.zx-idbar nav button { min-height: 32px; padding: 0 0.75rem; border: 1px solid var(--rule-control); border-radius: var(--radius-s); background: transparent; color: var(--ink); font-size: var(--fs-ui); font-variant-numeric: tabular-nums; cursor: pointer; }
+.zx-idbar nav button:hover { background: var(--raised); }
+.zx-chip { font-size: var(--fs-sm); padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; color: var(--ink-3); }
+.zx-chip.is-em { color: var(--lit); }
+.zx-chip.is-c1 { color: var(--formal); }
 
-/* Layout pass, 20 November evening: one page scroll, no nested scroll boxes. */
-.zx-main { height: auto; min-height: 0; align-items: start; }
-.zx-table { position: sticky; top: var(--space-3); height: calc(100vh - 2 * var(--space-3)); }
-.zx-detail { overflow: visible; min-height: 0; }
-.zx-work { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-height: 0; align-items: start; }
-.zx-map { height: min(82vh, 60rem); min-height: 30rem; display: flex; flex-direction: column; }
-.zx-map-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--rule); background: var(--surface); }
-.zx-map-head .zx-map-note { border: 0; padding: 0; background: none; max-width: none; color: var(--ink-3); }
-.zx-map-jumps { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.zx-inspect { align-self: start; max-height: none; }
-.zx-inspect--empty { padding: var(--space-3); }
-@media (min-width: 1500px) {
-  .zx-work { grid-template-columns: minmax(0, 1fr) 22rem; }
-  .zx-inspect { position: sticky; top: var(--space-3); max-height: calc(100vh - 2 * var(--space-3)); overflow-y: auto; }
+.zx-cert-head { padding: var(--space-6) var(--space-6) var(--space-2); }
+.zx-cert-head h2 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin: 0 0 var(--space-3); }
+.zx-conclusion { margin: 0; max-width: var(--prose); font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); color: var(--ink-2); text-wrap: pretty; }
+
+.zx-block { padding: var(--space-5) var(--space-6) var(--space-6); border-top: 1px solid var(--rule); margin-top: var(--space-5); }
+.zx-section { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); margin: 0 0 var(--space-3); }
+.zx-prose { margin: 0 0 var(--space-5); max-width: var(--prose); font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); color: var(--ink-2); text-wrap: pretty; }
+
+/* techniques beside the graph */
+.zx-bench { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+/* medium and large: the four techniques as a two-by-two grid, the graph full width below */
+@container detail (min-width: 56rem) {
+  .zx-tech { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .zx-tech > li, .zx-tech > li:first-child { padding: var(--space-4); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--raised); align-content: start; }
+  .zx-tech > li { grid-template-columns: 5.5rem minmax(0, 1fr); }
+  .zx-tech-ex { background: var(--sunk); }
 }
-.zx-chain { font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; color: var(--ink-2); word-break: break-word; margin: 0; }
-.zx-inspect h4 { margin-top: var(--space-3); }
-.zx-example { max-height: 9rem; }
-
-/* endpoint bars */
-.zx-gauges { display: grid; gap: var(--space-3); }
-.zx-gauge { display: grid; gap: var(--space-1); }
-.zx-gauge-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); font-size: var(--fs-base); }
-.zx-gauge-t { font-family: var(--font-serif); font-size: var(--fs-h4); font-variant-numeric: tabular-nums; }
-.zx-gauge-head .is-pos { color: var(--formal); font-weight: 600; }
-.zx-gauge-head .is-neg { color: var(--fail); font-weight: 600; }
-.zx-bar { position: relative; height: 14px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
-.zx-bar-error { position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--fail) 0 3px, transparent 3px 6px); opacity: 0.85; }
-.zx-bar-margin { position: absolute; top: 0; bottom: 0; background: color-mix(in oklab, var(--formal) 70%, transparent); }
-.zx-bar-z { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); }
-.zx-bar-zero { position: absolute; left: 0; top: -2px; bottom: -2px; width: 2px; background: var(--ink-2); }
-.zx-gauge-nums { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); margin: 0; font-size: var(--fs-sm); }
-.zx-gauge-nums div { display: flex; gap: var(--space-2); align-items: baseline; }
-.zx-gauge-nums dt { color: var(--ink-3); }
-.zx-gauge-nums dd { margin: 0; font-variant-numeric: tabular-nums; }
-.zx-gauge-nums small { color: var(--ink-3); margin-left: 0.4em; }
-@media (max-width: 820px) {
-  .zx-table { position: static; height: 60vh; }
-  .zx-map { height: 70vh; }
+/* very wide: techniques in a column beside a sticky graph */
+@container detail (min-width: 100rem) {
+  .zx-bench { grid-template-columns: minmax(28rem, 34rem) minmax(0, 1fr); gap: var(--space-6); }
+  .zx-tech { grid-template-columns: minmax(0, 1fr); }
+  .zx-bench-graph { position: sticky; top: 4.25rem; }
+  .zx-bench .zx-map { height: calc(100vh - 6rem); max-height: 64rem; }
 }
+.zx-tech { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.zx-tech > li { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--space-4); padding: var(--space-4) 0; border-top: 1px solid var(--rule); }
+.zx-tech > li:first-child { border-top: 0; padding-top: 0; }
+.zx-tech-n { margin: 0; font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-snug); font-variant-numeric: tabular-nums; }
+.zx-tech-n b { display: block; font-family: var(--font-serif); font-weight: 500; font-size: 1.75rem; line-height: 1.05; color: var(--ink); margin-bottom: 2px; }
+.zx-tech h4 { margin: 0.15rem 0 var(--space-2); font-size: var(--fs-card); font-weight: 600; color: var(--ink); }
+.zx-tech p { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); max-width: var(--prose); }
+.zx-tech p + p { margin-top: var(--space-2); }
+.zx-tech-split { font-size: var(--fs-sm) !important; line-height: var(--lh-ui) !important; color: var(--ink-3) !important; font-variant-numeric: tabular-nums; }
+.zx-tech-split b { color: var(--ink-2); font-weight: 600; }
+.zx-tech-ex { margin-top: var(--space-3); display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-s); background: var(--sunk); border-left: 2px solid var(--rule-strong); font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.zx-tech-ex-body { display: block; }
+.zx-tech-ex-body > span { display: block; margin-bottom: var(--space-1); }
+.zx-tech-ex b { color: var(--ink); }
+.zx-tech-code { display: block; font-size: var(--fs-xs) !important; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+.zx-tech-ex button { justify-self: start; min-height: 28px; padding: 0 0.7rem; border: 1px solid var(--rule-control); border-radius: var(--radius-s); background: var(--surface); color: var(--ink); font-size: var(--fs-sm); cursor: pointer; }
+.zx-tech-ex button::after { content: " →"; }
+.zx-tech-ex button:hover { background: var(--raised); border-color: var(--ink-3); }
 
-/* the detail panel floats over the graph's right edge only while a card is selected */
-.zx-work { grid-template-columns: minmax(0, 1fr) !important; }
-.zx-map { position: relative; }
-.zx-map .zx-inspect { position: absolute; top: 4.2rem; right: var(--space-3); bottom: var(--space-3); width: min(24rem, 45%); max-height: none; overflow-y: auto; z-index: 5; box-shadow: var(--shadow-panel); }
-.zx-inspect-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
-.zx-inspect-head button { font: inherit; font-size: 1.25rem; line-height: 1; border: 0; background: none; color: var(--ink-3); cursor: pointer; padding: 0.1rem 0.3rem; }
-.zx-inspect-head button:hover { color: var(--ink); }
-@media (max-width: 820px) { .zx-map .zx-inspect { position: static; width: auto; } }
-.zx-end-caption { max-width: 66ch; }
-.zx-compare { min-height: 24px; display: inline-flex; align-items: center; }
+/* the proof graph */
+.zx-map { position: relative; display: flex; flex-direction: column; height: clamp(28rem, 64vh, 46rem); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--ground); overflow: hidden; }
+.zx-map > .tree { flex: 1; min-height: 0; position: relative; }
+.zx-map-head { display: grid; gap: var(--space-2); padding: var(--space-3); border-bottom: 1px solid var(--rule); background: var(--surface); }
+.zx-map-head h4 { margin: 0; font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); }
+.zx-map-tools { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); }
+.zx-seg, .zx-zoom { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule-control); border-radius: var(--radius-s); overflow: hidden; }
+.zx-seg button, .zx-zoom button { min-height: 30px; padding: 0 0.7rem; border: 0; border-left: 1px solid var(--rule-control); background: transparent; color: var(--ink-2); font-size: var(--fs-sm); cursor: pointer; }
+.zx-seg button:first-child, .zx-zoom button:first-child { border-left: 0; }
+.zx-seg button:hover, .zx-zoom button:hover { color: var(--ink); background: var(--raised); }
+.zx-seg button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+.zx-zoom button { min-width: 32px; }
+.zx-map-note { margin: 0; padding: var(--space-2) var(--space-3); border-top: 1px solid var(--rule); background: var(--surface); font-size: var(--fs-xs); line-height: var(--lh-ui); color: var(--ink-3); }
+.zx-map-note { padding-right: max(var(--space-3), calc(100% - 90ch)); }
 
-/* how Lean computes the certificate, hover detail, sealed marks */
-.zx-howlean { border: 1px solid var(--rule); border-radius: var(--radius-s); padding: var(--space-3) var(--space-4); background: var(--raised); }
-.zx-howlean h3 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: 0 0 var(--space-1); }
-.zx-howlean p { margin: var(--space-1) 0 0; max-width: 72ch; line-height: var(--lh-read); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.zx-howlean code { font-size: var(--fs-sm); }
 .zx-hover { position: absolute; z-index: 6; pointer-events: none; max-width: 24rem; display: grid; gap: 0.2rem; padding: var(--space-2) var(--space-3); background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); box-shadow: var(--shadow-panel); font-size: var(--fs-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .zx-hover strong { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-base); color: var(--ink); }
 .zx-hover em { color: var(--ink-3); font-style: normal; font-size: var(--fs-xs); }
+.zx-hover-ex { font-size: var(--fs-xs); white-space: normal; word-break: break-word; color: var(--ink-2); }
 
-/* Pass of 20 November, late: the certificate as a picture, a shorter route to the computation. */
-.zx-head { padding-bottom: var(--space-2); }
-.zx-lede { max-width: 66ch; }
-.zx-starts { margin: var(--space-2) 0 0; font-size: var(--fs-sm); color: var(--ink-3); max-width: 90ch; }
-.zx-fig-slot { min-height: calc(180px + 4.4rem); }
-@media (max-width: 820px) { .zx-fig-slot { min-height: calc(180px + 8rem); } }
+.zx-inspect { position: absolute; top: 7.5rem; right: var(--space-3); bottom: 3.5rem; width: min(26rem, 46%); overflow-y: auto; z-index: 5; padding: var(--space-4); border: 1px solid var(--rule-strong); border-radius: var(--radius-m); background: var(--raised); box-shadow: var(--shadow-panel); font-size: var(--fs-ui); line-height: var(--lh-ui); }
+.zx-inspect-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
+.zx-inspect h3 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: 0 0 var(--space-2); }
+.zx-inspect-head button { font-size: 1.25rem; line-height: 1; border: 0; background: none; color: var(--ink-3); cursor: pointer; padding: 0.1rem 0.4rem; }
+.zx-inspect-head button:hover { color: var(--ink); }
+.zx-inspect h4 { font-size: var(--fs-sm); font-weight: 600; margin: var(--space-4) 0 var(--space-1); color: var(--ink); }
+.zx-inspect p { margin: var(--space-1) 0; color: var(--ink-2); }
+.zx-subject code { word-break: break-word; }
+.zx-value b { font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-sm); color: var(--ink); }
+.zx-chain { font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; color: var(--ink-2); word-break: break-word; }
+.zx-checks { padding-left: 1.2rem; margin: var(--space-1) 0; }
+.zx-example { margin: var(--space-2) 0 0; font-family: var(--font-mono); font-size: var(--fs-xs); white-space: pre-wrap; word-break: break-all; background: var(--sunk); padding: var(--space-2); border-radius: var(--radius-s); max-height: 11rem; overflow: auto; }
 
-.zx-cert { gap: var(--space-3); }
-.zx-cert h2 { font-size: var(--fs-h1); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-.zx-conclusion { color: var(--ink-2); max-width: 64ch; }
-.zx-section { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); margin: var(--space-4) 0 0; padding-top: var(--space-3); border-top: 1px solid var(--rule); }
-.zx-variant { font-family: var(--font-sans); font-size: var(--fs-base); line-height: var(--lh-ui); color: var(--ink-2); max-width: 72ch; }
-.zx-howlean { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); max-width: 78ch; border: 0; padding: 0; background: none; font-variant-numeric: tabular-nums; }
-.zx-howlean code { font-size: var(--fs-sm); }
+.zx-nodetail { padding: var(--space-4) var(--space-5); border: 1px dashed var(--rule-strong); border-radius: var(--radius-m); max-width: var(--prose); }
+.zx-nodetail p { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); }
+.zx-nodetail p + p { margin-top: var(--space-2); }
 
-.zx-sign { margin: 0; }
-.zx-sign-plot { width: 100%; }
+/* proof size */
+.zx-size { margin: var(--space-6) 0 0; display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 28rem); gap: var(--space-3) var(--space-6); align-items: center; }
+.zx-size figcaption { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); }
+.zx-size figcaption b, .zx-sign figcaption b { color: var(--ink); font-weight: 600; }
+.zx-size-pt { stroke: var(--surface); stroke-width: 1.5; cursor: pointer; }
+.zx-size-pt.is-em { fill: var(--lit); }
+.zx-size-pt.is-rs { fill: var(--ink-3); }
+.zx-size-pt.is-sel { stroke: var(--ink); stroke-width: 2.5; }
+.zx-size-label { fill: var(--ink); font-size: 13px; font-weight: 600; font-family: var(--font-sans); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
+.zx-grid-line { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 4; }
+.zx-tick { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-axis { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-weight: 600; }
+
+/* ---- the two checks: chart, table and notes as one figure ----------------------------- */
+.zx-checks-fig { display: grid; gap: var(--space-4); max-width: 72rem; }
+.zx-sign { margin: 0; min-width: 0; }
+.zx-sign-plot { width: 100%; min-width: 0; overflow: hidden; }
 .zx-sign svg { display: block; overflow: visible; }
+.zx-sign figcaption { margin-top: var(--space-2); font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: var(--prose); }
 .zx-sign-grid { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 4; }
 .zx-sign-zero { stroke: var(--ink-3); stroke-width: 1; }
-.zx-sign-tick { fill: var(--ink-3); font-size: 0.72rem; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
-.zx-sign-label { fill: var(--ink-3); font-size: 0.72rem; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-sign-tick, .zx-sign-label { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-sign-band { fill: color-mix(in oklab, var(--ink-3) 13%, transparent); }
+.zx-sign-bandlabel { fill: var(--ink-3); font-size: 12px; font-family: var(--font-sans); font-style: italic; }
 .zx-sign-int { cursor: pointer; }
 .zx-sign-col { fill: transparent; }
 .zx-sign-int.is-hover .zx-sign-col { fill: color-mix(in oklab, var(--ink) 4%, transparent); }
-.zx-sign-int.is-sel .zx-sign-col { fill: var(--lit-wash); }
-.zx-sign-int.is-sel .zx-sign-label { fill: var(--ink); font-weight: 600; }
+.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--ink) 5%, transparent); stroke: var(--rule-strong); }
+.zx-sign-int.is-sel .zx-sign-label { fill: var(--ink); font-weight: 700; font-size: 13px; }
 .zx-sign-bracket { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
-.zx-sign-int.is-sel .zx-sign-bracket { stroke: var(--lit); stroke-width: 3; }
-.zx-sign-end { opacity: 0.45; }
+.zx-sign-int.is-sel .zx-sign-bracket { stroke: var(--ink); stroke-width: 3; }
+.zx-sign-end { opacity: 0.4; }
 .zx-sign-end.is-sel { opacity: 1; }
 .zx-sign-end line { stroke-width: 2; }
-.zx-sign-end.is-pos line, .zx-sign-end.is-pos circle { stroke: var(--formal); fill: var(--formal); }
-.zx-sign-end.is-neg line, .zx-sign-end.is-neg circle { stroke: var(--fail); fill: var(--fail); }
-.zx-sign figcaption, .zx-end-caption { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: 78ch; margin-top: var(--space-1); }
+.zx-sign-end.is-sel line { stroke-width: 3; }
+.zx-sign-end.is-pos line, .zx-sign-end.is-pos circle { stroke: var(--pos); fill: var(--pos); }
+.zx-sign-end.is-neg line, .zx-sign-end.is-neg circle { stroke: var(--neg); fill: var(--neg); }
+.zx-sign-val { font-size: 13px; font-family: var(--font-sans); font-weight: 600; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface) !important; stroke-width: 4px; }
+.zx-sign-end.is-pos .zx-sign-val { fill: var(--pos); }
+.zx-sign-end.is-neg .zx-sign-val { fill: var(--neg); }
 
-.zx-ends { width: auto; }
-.zx-ends thead th { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); }
-.zx-ends th[scope="row"] { font-variant-numeric: tabular-nums; font-weight: 600; }
-.zx-ends td { font-family: var(--font-sans); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
-.zx-ends td.is-pos { color: var(--formal); }
-.zx-ends td.is-neg { color: var(--fail); }
-.zx-ends .zx-compare { margin: 0; white-space: nowrap; }
-.zx-map { height: min(80vh, 56rem); }
-.zx-sign-band { fill: color-mix(in oklab, var(--fail) 12%, transparent); }
-.zx-sign-bandlabel { fill: var(--fail); font-size: 0.72rem; font-family: var(--font-sans); opacity: 0.9; }
-.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--lit) 9%, transparent); }
-.zx-main { grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr); }
-.zx-tr { grid-template-columns: 3rem minmax(10.4rem, 1fr) 4.4rem 3.6rem; }
-@media (min-width: 2000px) { .zx-main { grid-template-columns: minmax(23rem, 28rem) 1fr; } }
-@media (max-width: 820px) {
-  .zx-main { grid-template-columns: minmax(0, 1fr); }
-  .zx-tr { grid-template-columns: 3rem minmax(0, 1fr) 4.2rem 3.4rem; }
-  .zx-tr > :nth-child(3) { display: revert; }
-  .zx-cert h2 { font-size: var(--fs-h2); }
+.zx-end-wrap { overflow-x: auto; min-width: 0; }
+.zx-ends { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.zx-ends th, .zx-ends td { padding: var(--space-2) var(--space-5) var(--space-2) 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.zx-ends thead th { font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); }
+.zx-ends th[scope="row"] { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h4); }
+.zx-ends td { font-size: var(--fs-ui); }
+.zx-ends td.is-pos { color: var(--pos); font-weight: 600; }
+.zx-ends td.is-neg { color: var(--neg); font-weight: 600; }
+.zx-at { color: var(--ink-3); }
+.zx-compare { padding: 0; border: 0; background: none; text-decoration: underline; text-underline-offset: 0.18em; color: var(--formal); font-size: var(--fs-sm); cursor: pointer; min-height: 24px; white-space: nowrap; }
+.zx-end-caption { margin: var(--space-2) 0 0; font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: var(--prose); }
+.zx-variant { margin: 0; max-width: var(--prose); font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); }
+.zx-comparison { border-left: 3px solid var(--ink); padding: var(--space-3) var(--space-4); background: var(--sunk); border-radius: 0 var(--radius-s) var(--radius-s) 0; }
+.zx-comparison .zx-row-nav { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.zx-comparison h3 { font-family: var(--font-serif); font-size: var(--fs-h3); font-weight: 500; margin: 0; }
+.zx-comparison p { font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--ink-2); }
+.zx-comparison .zx-row-nav button { min-height: 30px; padding: 0 0.7rem; border: 1px solid var(--rule-control); border-radius: var(--radius-s); background: transparent; color: var(--ink); cursor: pointer; }
+
+/* ---- provenance, error and loading ---------------------------------------------------- */
+.zx-foot { margin: 0; padding: var(--space-5) var(--space-6) var(--space-6); border-top: 1px solid var(--rule); }
+.zx-foot p { margin: 0; max-width: var(--prose); font-size: var(--fs-sm); line-height: var(--lh-read); color: var(--ink-2); }
+.zx-error { color: var(--fail); padding: 0 var(--gutter); }
+.zx-loading { color: var(--ink-3); padding: var(--space-5) var(--space-6); }
+.zx-block .zx-loading, .zx-block .zx-error { padding: 0; }
+
+/* ---- smaller screens ------------------------------------------------------------------ */
+@media (max-width: 1400px) {
+  .zx-head { grid-template-columns: minmax(0, 1fr); align-items: start; padding-top: var(--space-6); }
 }
-.zx-sign-val { font-size: 0.8rem; font-family: var(--font-sans); font-weight: 600; font-variant-numeric: tabular-nums; }
-.zx-sign-end.is-pos .zx-sign-val { fill: var(--formal); stroke: none; }
-.zx-sign-end.is-neg .zx-sign-val { fill: var(--fail); stroke: none; }
-.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--ink) 5%, transparent); stroke: color-mix(in oklab, var(--lit) 45%, transparent); stroke-dasharray: 3 3; }
-.zx-sign, .zx-sign-plot { min-width: 0; overflow: hidden; }
-.zx-detail, .zx-cert { min-width: 0; }
-.zx-howlean, .zx-sign figcaption, .zx-variant, .zx-end-caption { max-width: 64ch; }
-.zx-sign-int { min-height: 24px; }
-.zx-fig figcaption { max-width: 62ch; }
+@media (max-width: 1100px) {
+  .zx-starts { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+  .zx-starts h2 { grid-column: 1 / -1; }
+  .zx-size { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 860px) {
+  :root { --list-w: 100%; }
+  .zx-main { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .zx-table { position: static; height: 60vh; }
+  .zx-fig-slot { min-height: calc(168px + 8rem); }
+}
+@media (max-width: 600px) {
+  .zx-head h1 { font-size: 1.75rem; }
+  .zx-idbar, .zx-cert-head, .zx-block, .zx-foot { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .zx-cert-head h2 { font-size: var(--fs-h2); }
+  .zx-tr { grid-template-columns: 3rem minmax(0, 1fr) 3.8rem 3.2rem 0.9rem; gap: 6px; padding: 0 var(--space-2); font-size: var(--fs-sm); }
+  .zx-tech > li { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .zx-tech-n b { display: inline; font-size: 1.4rem; margin-right: 0.35rem; }
+  .zx-map { height: 70vh; }
+  .zx-inspect { position: absolute; top: auto; left: var(--space-2); right: var(--space-2); bottom: var(--space-2); width: auto; max-height: 60%; }
+  .zx-idbar nav button, .zx-compare, .zx-tech-ex button, .zx-seg button, .zx-zoom button { min-height: 44px; }
+}
 
-/* the metaprogram section */
-.zx-sub { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: var(--space-3) 0 0; }
-.zx-tech { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: tech; }
-.zx-tech > li { display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--rule); counter-increment: tech; }
-.zx-tech > li:first-child { border-top: 0; }
-.zx-tech h4 { margin: 0 0 var(--space-1); font-size: var(--fs-base); font-weight: 600; }
-.zx-tech h4::before { content: counter(tech) ". "; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.zx-tech p { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); max-width: 66ch; }
-.zx-tech code { font-size: var(--fs-sm); }
-.zx-tech-here { font-size: var(--fs-sm) !important; color: var(--ink-3) !important; align-self: start; font-variant-numeric: tabular-nums; }
-.zx-tech-here b { display: block; font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); color: var(--ink); line-height: 1.1; }
-.zx-tech-ex { margin: var(--space-2) 0 0; font-family: var(--font-mono); font-size: var(--fs-xs); background: var(--sunk); padding: var(--space-2); border-radius: var(--radius-s); white-space: pre-wrap; word-break: break-word; max-width: 70ch; }
-.zx-size { margin: var(--space-2) 0 0; max-width: 40rem; }
-.zx-size figcaption { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: 64ch; }
-.zx-size-pt { stroke: var(--ground); stroke-width: 1.5; cursor: pointer; }
-.zx-size-pt.is-em { fill: var(--lit); }
-.zx-size-pt.is-rs { fill: var(--formal); }
-.zx-size-pt.is-sel { stroke: var(--ink); stroke-width: 2.5; }
-.zx-hover-ex { font-size: var(--fs-xs); white-space: normal; word-break: break-word; color: var(--ink-2); }
-@media (max-width: 820px) { .zx-tech > li { grid-template-columns: 1fr; gap: var(--space-1); } }
+/* Large monitors: everything reads a step larger instead of leaving the panels sparse. */
+@media (min-width: 1900px) {
+  html { font-size: 112.5%; }
+  :root { --list-w: 27rem; }
+}

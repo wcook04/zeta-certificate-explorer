@@ -12,7 +12,7 @@ import type { Row } from "./types";
 // logarithmic outside it. The certificate's two conditions become: each endpoint lies outside the band
 // [−1, 1], and the two endpoints lie on opposite sides of it.
 const f = (v: number) => (Math.abs(v) <= 1 ? v : Math.sign(v) * (1 + Math.log10(Math.abs(v))));
-const PAD = { left: 52, right: 16, top: 14, bottom: 30 };
+const PAD = { left: 64, right: 16, top: 16, bottom: 30 };
 const SUP: Record<string, string> = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
 const tickLabel = (v: number) => {
   if (v === 0) return "0";
@@ -25,7 +25,7 @@ const tickLabel = (v: number) => {
 /** Z̃ / error bound for a label: two significant figures, powers of ten when large. */
 function ratio(v: number): string {
   const a = Math.abs(v), s = v < 0 ? "−" : "";
-  if (a < 1000) return `${s}${a.toPrecision(2).replace(/\.0$/, "")}×`;
+  if (a < 1000) return `${s}${a.toPrecision(2).replace(/\.0$/, "")}`;
   const e = Math.floor(Math.log10(a));
   return `${s}${(a / 10 ** e).toFixed(1)}×10${String(e).split("").map((d) => SUP[d] ?? d).join("")}`;
 }
@@ -36,7 +36,7 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(700);
   const [hover, setHover] = useState<number | null>(null);
-  const height = 270;
+  const height = 300;
 
   useEffect(() => {
     const el = box.current;
@@ -68,7 +68,8 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
       <div ref={box} className="zx-sign-plot">
         <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`Z(t) is ${row.ends[0].sign === "+" ? "positive" : "negative"} at t = ${row.left} and ${row.ends[1].sign === "+" ? "positive" : "negative"} at t = ${row.right}`}>
           <rect x={PAD.left} width={width - PAD.left - PAD.right} y={sy(1)} height={sy(-1) - sy(1)} className="zx-sign-band" />
-          <text x={width - PAD.right - 6} y={sy(1) - 5} textAnchor="end" className="zx-sign-bandlabel">|Z̃| within the error bound</text>
+          <text x={width - PAD.right - 6} y={sy(1) - 5} textAnchor="end" className="zx-sign-bandlabel">inside the band the sign is not proved</text>
+          <text transform={`translate(12 ${(PAD.top + height - PAD.bottom) / 2}) rotate(-90)`} textAnchor="middle" className="zx-axis">Z̃ ÷ error bound</text>
           {ticks.map((v) => (
             <g key={v}>
               <line x1={PAD.left} x2={width - PAD.right} y1={sy(v)} y2={sy(v)} className={v === 0 ? "zx-sign-zero" : "zx-sign-grid"} />
@@ -83,7 +84,7 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
                 onMouseEnter={() => setHover(r.row)} onMouseLeave={() => setHover(null)} onClick={() => onChoose(r.row)}>
                 <rect x={x0} y={PAD.top} width={Math.max(1, x1 - x0)} height={height - PAD.top - PAD.bottom} className="zx-sign-col" />
                 <path d={`M${x0},${zeroY - 5}V${zeroY + 5}M${x0},${zeroY}H${x1}M${x1},${zeroY - 5}V${zeroY + 5}`} className="zx-sign-bracket" />
-                {(sel || x1 - x0 > 44) && <text x={(x0 + x1) / 2} y={height - 10} textAnchor="middle" className="zx-sign-label">{r.row.toLocaleString("en-GB")}</text>}
+                {(sel || x1 - x0 > 44) && <text x={(x0 + x1) / 2} y={height - 10} textAnchor="middle" className="zx-sign-label">#{r.row.toLocaleString("en-GB")}</text>}
               </g>
             );
           })}
@@ -99,7 +100,7 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
                 <circle cx={x} cy={sy((e.lo + e.hi) / 2)} r={sel ? 4 : 2.75} />
                 {sel && (
                   <text x={x + (e.side === 0 ? -8 : 8)} y={sy((e.lo + e.hi) / 2)} dominantBaseline="middle" textAnchor={e.side === 0 ? "end" : "start"} className="zx-sign-val">
-                    {ratio((e.lo + e.hi) / 2)}
+                    {e.side === 0 ? "left " : "right "}{ratio(Math.min(e.lo, e.hi))}{ratio(Math.min(e.lo, e.hi)) === ratio(Math.max(e.lo, e.hi)) ? "" : ` to ${ratio(Math.max(e.lo, e.hi))}`}
                   </text>
                 )}
               </g>
@@ -108,9 +109,10 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
         </svg>
       </div>
       <figcaption>
-        Certificate {row.row.toLocaleString("en-GB")} and its neighbours. Each point is the approximation Z̃ at an endpoint divided by the error
-        bound proved there, so it must lie outside the shaded band between −1 and 1, and the two points of one interval must lie on opposite
-        sides of it. Then Z itself changes sign across the interval. The scale is logarithmic outside the band. Click an interval to open it.
+        <b>Both endpoints clear the band, on opposite sides.</b> Certificate {row.row.toLocaleString("en-GB")} and its neighbours, placed by
+        height t. Each bar is the proved range of Z̃ at an endpoint divided by the error bound there; the label gives that range. A bar
+        wholly outside the band from −1 to 1 fixes the sign of Z at that endpoint, and opposite signs at the two ends put a zero between them.
+        Outside the band the scale is logarithmic. Click an interval to open it.
       </figcaption>
     </figure>
   );
