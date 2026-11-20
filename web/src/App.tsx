@@ -208,12 +208,31 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
   const byId = useMemo(() => new Map(tree?.nodes.map((n) => [n.id, n]) ?? []), [tree]);
   const noTrace = useCallback(() => undefined, []);
   const view = useRef<MapViewHandle>(null);
-  // Frame the certificate's first row once the tree has laid out in its box.
+  const mapBox = useRef<HTMLDivElement>(null);
+  // The page scrolls over the graph; the graph only zooms on a pinch or Ctrl/Cmd with the wheel.
+  // Stopped in the capture phase on our wrapper, so the map engine itself is unchanged.
   useEffect(() => {
-    if (!graph) return;
-    const t = window.setTimeout(() => view.current?.fitAll(false), 120);
+    const el = mapBox.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => { if (!e.ctrlKey && !e.metaKey) e.stopPropagation(); };
+    el.addEventListener("wheel", onWheel, { capture: true });
+    let timer = 0;
+    const ro = new ResizeObserver(() => { window.clearTimeout(timer); timer = window.setTimeout(() => view.current?.fitAll(false), 150); });
+    ro.observe(el);
+    return () => { el.removeEventListener("wheel", onWheel, { capture: true }); ro.disconnect(); window.clearTimeout(timer); };
+  }, [graph]);
+  // Frame the certificate's first row once the tree has laid out in its box.
+  // On opening the whole certificate, unfold to the two endpoint values and the error bound, so the
+  // first picture already holds the numbers the certificate is about; then frame everything drawn.
+  useEffect(() => {
+    if (!graph || !tree) return;
+    const t = window.setTimeout(() => {
+      const ids = focus ? [] : tree.nodes.filter((n) => n.value && (n.label === "Z̃ at the left end" || n.label === "Z̃ at the right end" || n.label.startsWith("error bound"))).map((n) => n.id);
+      if (ids.length) view.current?.revealIds(ids);
+      window.setTimeout(() => view.current?.fitAll(false), 450);
+    }, 120);
     return () => window.clearTimeout(t);
-  }, [graph, focus]);
+  }, [graph, tree, focus]);
   const jumpCards = tree ? [
     { label: "Left approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the left end") },
     { label: "Right approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the right end") },
@@ -242,15 +261,13 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
       {row.detail ? (
         graph && tree ? (
           <div className="zx-work">
-            <div className="zx-map">
-              <p className="zx-map-note">
-                {focus ? "A selected part of the certificate." : "The certificate’s proof dependencies."} Unfold a quantity to follow its calculation;
-                select it to inspect the enclosure and arithmetic checks. Shared nodes are drawn once. The graph records the successful
-                proof, not a timed history of its construction.
-              </p>
-              <div className="zx-map-jumps" role="group" aria-label="Start from a numerical quantity">
-                <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
-                {jumpCards.map(({ label, card: target }) => <button key={label} type="button" aria-pressed={focus === target!.id} onClick={() => { setFocus(target!.id); setCard(target!.id); }}>{label}</button>)}
+            <div className="zx-map" ref={mapBox}>
+              <div className="zx-map-head">
+                <div className="zx-map-jumps" role="group" aria-label="Start from a numerical quantity">
+                  <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
+                  {jumpCards.map(({ label, card: target }) => <button key={label} type="button" aria-pressed={focus === target!.id} onClick={() => { setFocus(target!.id); setCard(target!.id); }}>{label}</button>)}
+                </div>
+                <p className="zx-map-note">Click a card to read it, open its inputs with the small arrow. Drag to move; pinch or hold Ctrl and scroll to zoom.</p>
               </div>
               <ArgumentTree
                 key={`${tree.row}:${focus ?? tree.root}`}
@@ -267,8 +284,8 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
                 onSelect={setCard}
                 onTrace={noTrace}
               />
+              {card && byId.get(card) && <Inspector card={byId.get(card)!} onClose={() => setCard(null)} />}
             </div>
-            <Inspector card={card ? byId.get(card) ?? null : null} />
           </div>
         ) : (
           <p className={treeError ? "zx-error" : "zx-loading"}>{treeError ? `Could not load the computation: ${treeError}. The endpoint checks above are still available.` : "Loading the computation…"}</p>
@@ -296,35 +313,52 @@ function minDecimal(a: string, b: string): string {
   return an * 10n ** BigInt(p - ap) <= bn * 10n ** BigInt(p - bp) ? a : b;
 }
 
+/** |Z̃| at least: the endpoint of the enclosure nearer zero. */
+const nearZero = (z: [string, string]) => Math.min(Math.abs(Number(z[0])), Math.abs(Number(z[1])));
+
+function sci(x: string): string {
+  const n = Number(x);
+  if (!Number.isFinite(n) || n === 0) return x;
+  if (Math.abs(n) >= 1e-3) return x;
+  const [m, ex] = n.toExponential(2).split("e");
+  return `${m} × 10${ex.replace("-", "⁻").replace(/\d/g, (d) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[Number(d)])}`;
+}
+
 function Ends({ row, neighbours, onCompare }: { row: Row; neighbours: readonly (Row | undefined)[]; onCompare(side: 0 | 1): void }) {
   const t = [row.left, row.right];
   return (
-    <div className="zx-end-wrap">
-      <table className="zx-ends">
-        <thead><tr>
-          <th scope="col">Endpoint t</th>
-          <th scope="col">Approximation Z̃(t)</th>
-          <th scope="col">Error at most</th>
-          <th scope="col">True Z(t)</th>
-          <th scope="col">Distance from 0, at least</th>
-        </tr></thead>
-        <tbody>{row.ends.map((e, i) => (
-          <tr key={i}>
-            <th scope="row">
-              {t[i]}
-              {neighbours[i] && <button type="button" className="zx-compare" onClick={() => onCompare(i as 0 | 1)}>Compare shared end</button>}
-            </th>
-            <td>[{e.z[0]}, {e.z[1]}]</td>
-            <td>{e.bound}</td>
-            <td className={e.sign === "+" ? "is-pos" : "is-neg"}>
-              <strong>{e.sign === "+" ? "Positive" : "Negative"}</strong>
-              {e.trueZ && <span className="zx-range">[{e.trueZ[0]}, {e.trueZ[1]}]</span>}
-            </td>
-            <td>≥ {e.margin}</td>
-          </tr>
-        ))}</tbody>
-      </table>
-      <p className="zx-end-caption">The interval for true Z widens the approximation’s enclosure by its analytic error bound. All displayed bounds round outward; distances round down.</p>
+    <div className="zx-gauges">
+      {row.ends.map((e, i) => {
+        const a = nearZero(e.z);
+        const b = Number(e.bound);
+        // each bar has its own scale, so the share of |Z̃| taken by the error bound is what shows
+        const scale = Math.max(a, b) * 1.02;
+        const pct = (x: number) => `${Math.max(0, Math.min(100, (x / scale) * 100))}%`;
+        const tinyError = b / scale < 0.004;
+        return (
+          <div className="zx-gauge" key={i}>
+            <div className="zx-gauge-head">
+              <span className="zx-gauge-t">t = {t[i]}</span>
+              <span className={e.sign === "+" ? "is-pos" : "is-neg"}>Z(t) is {e.sign === "+" ? "positive" : "negative"}</span>
+              {neighbours[i] && <button type="button" className="zx-compare" onClick={() => onCompare(i as 0 | 1)}>Compare with interval {fmt(neighbours[i]!.row)}</button>}
+            </div>
+            <div className="zx-bar" aria-hidden="true">
+              <span className="zx-bar-margin" style={{ left: pct(b), width: `calc(${pct(a)} - ${pct(b)})` }} />
+              <span className="zx-bar-error" style={{ width: tinyError ? "2px" : pct(b) }} />
+              <span className="zx-bar-z" style={{ left: pct(a) }} />
+              <span className="zx-bar-zero" />
+            </div>
+            <dl className="zx-gauge-nums">
+              <div><dt>|Z̃(t)| at least</dt><dd>{a.toPrecision(6)}</dd></div>
+              <div><dt>Error bound</dt><dd>{sci(e.bound)}{e.boundAt && e.boundAt !== t[i] ? <small> proved at t = {e.boundAt}</small> : null}</dd></div>
+              <div><dt>Margin left</dt><dd>{e.margin}</dd></div>
+              <div><dt>Error uses</dt><dd>{b / a < 0.001 ? "under 0.1%" : `${(100 * b / a).toPrecision(2)}%`} of |Z̃(t)|</dd></div>
+              <div><dt>Z̃(t) enclosure</dt><dd>[{e.z[0]}, {e.z[1]}]</dd></div>
+            </dl>
+          </div>
+        );
+      })}
+      <p className="zx-end-caption">Each bar runs from 0 to |Z̃(t)| at its own scale. The hatched part is the share taken by the proved error bound and the solid part is what is left, so Z(t) has the sign of Z̃(t). Bounds round outward and margins round down.</p>
     </div>
   );
 }
@@ -369,25 +403,11 @@ const CHECK_WORDS: Record<string, string> = {
   decide: "decided by evaluation",
 };
 
-function Inspector({ card }: { card: CertCard | null }) {
-  const box = useRef<HTMLElement>(null);
-  // Below the graph (narrower screens), bring the inspector into view when a card is chosen.
-  useEffect(() => {
-    const el = box.current;
-    if (!card || !el) return;
-    const r = el.getBoundingClientRect();
-    if (r.top > window.innerHeight - 80) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [card]);
-  if (!card)
-    return (
-      <aside className="zx-inspect zx-inspect--empty">
-        <p>Select a card to see the quantity, its proved interval, the lemmas that produced it and the arithmetic the kernel checked.</p>
-      </aside>
-    );
+function Inspector({ card, onClose }: { card: CertCard; onClose(): void }) {
   const checks = card.checks.reduce((n, c) => n + c.count, 0);
   return (
-    <aside className="zx-inspect" aria-live="polite" ref={box}>
-      <h3>{card.label}</h3>
+    <aside className="zx-inspect" aria-live="polite">
+      <div className="zx-inspect-head"><h3>{card.label}</h3><button type="button" onClick={onClose} aria-label="Close">×</button></div>
       {card.subject && <p className="zx-subject"><code>{card.subject}</code></p>}
       {card.value && (
         <p className="zx-value">
@@ -395,42 +415,30 @@ function Inspector({ card }: { card: CertCard | null }) {
         </p>
       )}
       {card.kind === "group" && <p className="zx-how">These are separate fields of the certificate, drawn as one card here.</p>}
-      {card.head && <p className="zx-how">
-        Last step: <code>{card.head.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "$1 (a lemma the builder sealed)")}</code>
-        {card.stepCount > 0 && <> after {card.stepCount} earlier step{card.stepCount > 1 ? "s" : ""} on the same value</>}.
-      </p>}
       {card.steps.length > 0 && (
-        <details>
-          <summary>{card.kind === "group" ? "The conditions" : "The steps"}</summary>
-          <ol className="zx-steps">
-            {card.steps.map((s, i) => (
-              <li key={i}>{s.head ? <code>{s.head.replace(/^Enclosure\./, "")}</code> : s.statement}</li>
-            ))}
-          </ol>
-        </details>
+        <>
+          <h4>{card.kind === "group" ? "The conditions" : `How Lean reached this value (${card.stepCount + 1} steps)`}</h4>
+          <p className="zx-chain">
+            {card.kind === "group"
+              ? card.steps.map((s) => s.statement).join("; ")
+              : [card.head, ...card.steps.map((s) => s.head)].slice(0, 10).map((h) => h.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "sealed $1").replace(/^(Enclosure|BSN|Zeta\.Certificates)\./, "")).join(" ← ")}
+            {card.steps.length > 9 ? " ← …" : ""}
+          </p>
+        </>
       )}
       {checks > 0 && (
         <>
-          <h4>What the kernel checks here ({checks})</h4>
+          <h4>What the kernel computes here ({checks})</h4>
           <ul className="zx-checks">
             {card.checks.map((c, i) => (
-              <li key={i}>
-                {c.count} × <code>{c.head.replace(/^Enclosure\./, "").replace(/^BSN\./, "") || "—"}</code>, {CHECK_WORDS[c.kind] ?? c.kind}
-              </li>
+              <li key={i}>{c.count} × <code>{c.head.replace(/^Enclosure\./, "").replace(/^BSN\./, "") || "—"}</code>, {CHECK_WORDS[c.kind] ?? c.kind}</li>
             ))}
           </ul>
-          {card.checkExamples.length > 0 && (
-            <details>
-              <summary>An example, as the kernel sees it</summary>
-              <pre className="zx-example">{card.checkExamples[0]}</pre>
-            </details>
-          )}
+          {card.checkExamples.length > 0 && <pre className="zx-example">{card.checkExamples[0]}</pre>}
         </>
       )}
-      <details>
-        <summary>The statement proved</summary>
-        <pre className="zx-example">{card.statement}</pre>
-      </details>
+      <h4>The statement proved</h4>
+      <pre className="zx-example">{card.statement}</pre>
     </aside>
   );
 }

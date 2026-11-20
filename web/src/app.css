@@ -160,3 +160,55 @@ details summary { cursor: pointer; color: var(--formal); margin-top: var(--space
 .zx-fig figcaption { max-width: 64ch; }
 .zx-foot p { max-width: 66ch; }
 .zx-conclusion, .zx-variant, .zx-map-note, .zx-nodetail, .zx-welcome p { max-width: 64ch; }
+
+/* Layout pass, 20 November evening: one page scroll, no nested scroll boxes. */
+.zx-main { height: auto; min-height: 0; align-items: start; }
+.zx-table { position: sticky; top: var(--space-3); height: calc(100vh - 2 * var(--space-3)); }
+.zx-detail { overflow: visible; min-height: 0; }
+.zx-work { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-height: 0; align-items: start; }
+.zx-map { height: min(82vh, 60rem); min-height: 30rem; display: flex; flex-direction: column; }
+.zx-map-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--rule); background: var(--surface); }
+.zx-map-head .zx-map-note { border: 0; padding: 0; background: none; max-width: none; color: var(--ink-3); }
+.zx-map-jumps { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.zx-inspect { align-self: start; max-height: none; }
+.zx-inspect--empty { padding: var(--space-3); }
+@media (min-width: 1500px) {
+  .zx-work { grid-template-columns: minmax(0, 1fr) 22rem; }
+  .zx-inspect { position: sticky; top: var(--space-3); max-height: calc(100vh - 2 * var(--space-3)); overflow-y: auto; }
+}
+.zx-chain { font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; color: var(--ink-2); word-break: break-word; margin: 0; }
+.zx-inspect h4 { margin-top: var(--space-3); }
+.zx-example { max-height: 9rem; }
+
+/* endpoint bars */
+.zx-gauges { display: grid; gap: var(--space-3); }
+.zx-gauge { display: grid; gap: var(--space-1); }
+.zx-gauge-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); font-size: var(--fs-base); }
+.zx-gauge-t { font-family: var(--font-serif); font-size: var(--fs-h4); font-variant-numeric: tabular-nums; }
+.zx-gauge-head .is-pos { color: var(--formal); font-weight: 600; }
+.zx-gauge-head .is-neg { color: var(--fail); font-weight: 600; }
+.zx-bar { position: relative; height: 14px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.zx-bar-error { position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--fail) 0 3px, transparent 3px 6px); opacity: 0.85; }
+.zx-bar-margin { position: absolute; top: 0; bottom: 0; background: color-mix(in oklab, var(--formal) 70%, transparent); }
+.zx-bar-z { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); }
+.zx-bar-zero { position: absolute; left: 0; top: -2px; bottom: -2px; width: 2px; background: var(--ink-2); }
+.zx-gauge-nums { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); margin: 0; font-size: var(--fs-sm); }
+.zx-gauge-nums div { display: flex; gap: var(--space-2); align-items: baseline; }
+.zx-gauge-nums dt { color: var(--ink-3); }
+.zx-gauge-nums dd { margin: 0; font-variant-numeric: tabular-nums; }
+.zx-gauge-nums small { color: var(--ink-3); margin-left: 0.4em; }
+@media (max-width: 820px) {
+  .zx-table { position: static; height: 60vh; }
+  .zx-map { height: 70vh; }
+}
+
+/* the detail panel floats over the graph's right edge only while a card is selected */
+.zx-work { grid-template-columns: minmax(0, 1fr) !important; }
+.zx-map { position: relative; }
+.zx-map .zx-inspect { position: absolute; top: 4.2rem; right: var(--space-3); bottom: var(--space-3); width: min(24rem, 45%); max-height: none; overflow-y: auto; z-index: 5; box-shadow: var(--shadow-panel); }
+.zx-inspect-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
+.zx-inspect-head button { font: inherit; font-size: 1.25rem; line-height: 1; border: 0; background: none; color: var(--ink-3); cursor: pointer; padding: 0.1rem 0.3rem; }
+.zx-inspect-head button:hover { color: var(--ink); }
+@media (max-width: 820px) { .zx-map .zx-inspect { position: static; width: auto; } }
+.zx-end-caption { max-width: 66ch; }
+.zx-compare { min-height: 24px; display: inline-flex; align-items: center; }
