@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ArgumentTree, type MapViewHandle } from "./map/ArgumentTree";
 import { certGraph } from "./certGraph";
+import { MarginStrip } from "./MarginStrip";
 import type { CertCard, CertTree, Manifest, Row } from "./types";
 
 const DATA = `${import.meta.env.BASE_URL}data`;
@@ -59,18 +60,20 @@ export function App() {
 
   return (
     <div className="zx">
+      <a className="zx-skip" href="#intervals">Skip to the intervals</a>
       <header className="zx-head">
         <h1>Zero certificates up to height 10,011</h1>
         <p className="zx-lede">
-          Salvatore Mercuri and Bhavik Mehta's <a href={REPO}>Lean verification</a> proves that every nontrivial zero with
-          |Im(s)| &lt; 10,011 lies on the critical line. Explore the {rows ? fmt(rows.length) : "10,156"} certified intervals used in that
-          proof: inspect both endpoint checks, compare a shared endpoint, or open one of the fourteen extracted computations.
+          Every interval Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean verification</a> certifies to contain a zero of Hardy’s Z
+          function, with the numbers read from their compiled proof.
         </p>
       </header>
 
+      <div className="zx-fig-slot">{rows && <MarginStrip rows={rows} selected={selected} onChoose={choose} />}</div>
+
       {error && <p className="zx-error">Could not load the data: {error}</p>}
 
-      <main className="zx-main">
+      <main className="zx-main" id="intervals">
         <section className="zx-table" aria-label="Certified intervals">
           <div className="zx-filters" role="group" aria-label="Which intervals to list">
             {FILTERS.map((f) => (
@@ -90,7 +93,7 @@ export function App() {
 
       <footer className="zx-foot">
         <p>
-          The verification, its Lean and its data are Salvatore Mercuri and Bhavik Mehta's (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0),
+          The verification, its Lean and its data are Salvatore Mercuri and Bhavik Mehta’s (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0),
           built at commit {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} with {manifest?.provenance.toolchain ?? "Lean"}. Every number here
           was read from their compiled proof by a program and rounded outward: an interval is never printed narrower, or a margin larger,
           than the proof shows. The program, this page and its plain-language labels were made by Will Cook with AI and have not been
@@ -106,9 +109,9 @@ function Welcome({ rows, onChoose }: { rows: Row[] | null; onChoose(row: number)
     <div className="zx-welcome">
       <h2>Pick an interval</h2>
       <p>
-        Each certificate shows two things at the ends of its interval: the approximation Z̃ of Hardy's Z function has opposite signs, and at
-        each end |Z̃| is larger than the proved bound on the approximation's error. So Z itself changes sign, and ζ(½ + it) has a zero in
-        between. A certificate proves existence inside its bracket; Turing's method supplies the global count.
+        Each certificate shows two things at the ends of its interval: the approximation Z̃ of Hardy’s Z function has opposite signs, and at
+        each end |Z̃| is larger than the proved bound on the approximation’s error. So Z itself changes sign, and ζ(½ + it) has a zero in
+        between. A certificate proves existence inside its bracket; Turing’s method supplies the global count.
       </p>
       {rows && (
         <ul className="zx-starts">
@@ -164,7 +167,7 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
                 onClick={() => onChoose(r.row)}
               >
                 <span className="zx-num">{fmt(r.row)}</span>
-                <span className="zx-t">{r.left} – {r.right}</span>
+                <span className="zx-t">[{r.left}, {r.right}]</span>
                 <span>{VARIANT_WORDS[r.variant]}</span>
                 <span className="zx-num">
                   {r.marginShort ?? minDecimal(r.ends[0].margin, r.ends[1].margin)}
@@ -220,7 +223,7 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
   return (
     <div className="zx-cert">
       <div className="zx-row-nav">
-        <span>Interval {fmt(row.row)} · {VARIANT_WORDS[row.variant]}</span>
+        <span>Interval {fmt(row.row)}, {VARIANT_WORDS[row.variant]}</span>
         <nav aria-label="Neighbouring intervals">
           {previous && <button type="button" onClick={() => onChoose(previous.row)}>← Previous</button>}
           {next && <button type="button" onClick={() => onChoose(next.row)}>Next →</button>}
@@ -241,7 +244,7 @@ function Detail({ row, previous, next, onChoose }: { row: Row; previous?: Row; n
           <div className="zx-work">
             <div className="zx-map">
               <p className="zx-map-note">
-                {focus ? "A selected part of the certificate." : "The certificate's proof dependencies."} Unfold a quantity to follow its calculation;
+                {focus ? "A selected part of the certificate." : "The certificate’s proof dependencies."} Unfold a quantity to follow its calculation;
                 select it to inspect the enclosure and arithmetic checks. Shared nodes are drawn once. The graph records the successful
                 proof, not a timed history of its construction.
               </p>
@@ -321,7 +324,7 @@ function Ends({ row, neighbours, onCompare }: { row: Row; neighbours: readonly (
           </tr>
         ))}</tbody>
       </table>
-      <p className="zx-end-caption">The interval for true Z widens the approximation's enclosure by its analytic error bound. All displayed bounds round outward; distances round down.</p>
+      <p className="zx-end-caption">The interval for true Z widens the approximation’s enclosure by its analytic error bound. All displayed bounds round outward; distances round down.</p>
     </div>
   );
 }

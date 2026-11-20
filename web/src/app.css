@@ -118,3 +118,45 @@ details summary { cursor: pointer; color: var(--formal); margin-top: var(--space
   .zx-comparison { padding: var(--space-2); }
   .zx-main { gap: var(--space-3); }
 }
+
+
+/* Design pass, 20 November: one figure from the data, text-face numbers, sentence-case labels. */
+.zx-skip { position: absolute; left: var(--space-4); top: -3rem; padding: var(--space-2) var(--space-3); background: var(--ink); color: var(--ground); border-radius: var(--radius-s); z-index: 10; }
+.zx-skip:focus-visible { top: var(--space-2); }
+.zx-head { padding-bottom: var(--space-2); }
+.zx-head h1 { letter-spacing: -0.01em; text-wrap: balance; }
+.zx-lede { max-width: 62ch; text-wrap: pretty; }
+.zx-conclusion, .zx-variant, .zx-map-note, .zx-nodetail, .zx-welcome p { max-width: 68ch; text-wrap: pretty; }
+.zx-foot p { max-width: 96ch; }
+
+/* numbers in the text face, aligned; monospace only for Lean */
+.zx-t, .zx-ends td, .zx-range, .zx-value b, .zx-num { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-t { font-size: var(--fs-ui); }
+.zx-ends td { font-size: var(--fs-ui); }
+
+/* sentence-case column labels instead of tracked capitals */
+.zx-th, .zx-ends thead th { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); }
+
+/* the figure */
+.zx-fig { margin: 0 var(--space-6) var(--space-2); padding: var(--space-3) var(--space-4) var(--space-2); border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
+.zx-fig-plot { position: relative; }
+.zx-fig canvas { display: block; cursor: default; }
+.zx-fig canvas.is-pointing { cursor: pointer; }
+.zx-fig-tip { position: absolute; transform: translateX(-50%); pointer-events: none; background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); padding: 0.3rem 0.55rem; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--card-shadow); }
+.zx-fig figcaption { font-size: var(--fs-sm); color: var(--ink-2); line-height: var(--lh-ui); max-width: 110ch; margin-top: var(--space-1); }
+.zx-key { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; vertical-align: baseline; margin-left: 0.25rem; }
+.zx-key--c1 { background: var(--formal); }
+.zx-key--em { background: var(--lit); }
+.zx-main { height: calc(100vh - 3.5rem); min-height: 34rem; }
+@media (max-width: 820px) {
+  .zx-fig { margin: 0 var(--space-4) var(--space-2); padding: var(--space-2); }
+  .zx-main { height: auto; }
+}
+.zx a.zx-skip { color: var(--ground); }
+.zx-fig-slot { min-height: calc(220px + 5.6rem); }
+.zx-fig figcaption { max-width: 78ch; }
+@media (max-width: 820px) { .zx-fig-slot { min-height: calc(220px + 9rem); } }
+.zx-foot p { max-width: 78ch; }
+.zx-fig figcaption { max-width: 64ch; }
+.zx-foot p { max-width: 66ch; }
+.zx-conclusion, .zx-variant, .zx-map-note, .zx-nodetail, .zx-welcome p { max-width: 64ch; }
