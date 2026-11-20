@@ -221,3 +221,69 @@ details summary { cursor: pointer; color: var(--formal); margin-top: var(--space
 .zx-hover { position: absolute; z-index: 6; pointer-events: none; max-width: 24rem; display: grid; gap: 0.2rem; padding: var(--space-2) var(--space-3); background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--radius-s); box-shadow: var(--shadow-panel); font-size: var(--fs-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .zx-hover strong { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-base); color: var(--ink); }
 .zx-hover em { color: var(--ink-3); font-style: normal; font-size: var(--fs-xs); }
+
+/* Pass of 20 November, late: the certificate as a picture, a shorter route to the computation. */
+.zx-head { padding-bottom: var(--space-2); }
+.zx-lede { max-width: 66ch; }
+.zx-starts { margin: var(--space-2) 0 0; font-size: var(--fs-sm); color: var(--ink-3); max-width: 90ch; }
+.zx-fig-slot { min-height: calc(180px + 4.4rem); }
+@media (max-width: 820px) { .zx-fig-slot { min-height: calc(180px + 8rem); } }
+
+.zx-cert { gap: var(--space-3); }
+.zx-cert h2 { font-size: var(--fs-h1); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.zx-conclusion { color: var(--ink-2); max-width: 64ch; }
+.zx-section { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); margin: var(--space-4) 0 0; padding-top: var(--space-3); border-top: 1px solid var(--rule); }
+.zx-variant { font-family: var(--font-sans); font-size: var(--fs-base); line-height: var(--lh-ui); color: var(--ink-2); max-width: 72ch; }
+.zx-howlean { margin: 0; font-size: var(--fs-base); line-height: var(--lh-read); color: var(--ink-2); max-width: 78ch; border: 0; padding: 0; background: none; font-variant-numeric: tabular-nums; }
+.zx-howlean code { font-size: var(--fs-sm); }
+
+.zx-sign { margin: 0; }
+.zx-sign-plot { width: 100%; }
+.zx-sign svg { display: block; overflow: visible; }
+.zx-sign-grid { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 4; }
+.zx-sign-zero { stroke: var(--ink-3); stroke-width: 1; }
+.zx-sign-tick { fill: var(--ink-3); font-size: 0.72rem; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-sign-label { fill: var(--ink-3); font-size: 0.72rem; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.zx-sign-int { cursor: pointer; }
+.zx-sign-col { fill: transparent; }
+.zx-sign-int.is-hover .zx-sign-col { fill: color-mix(in oklab, var(--ink) 4%, transparent); }
+.zx-sign-int.is-sel .zx-sign-col { fill: var(--lit-wash); }
+.zx-sign-int.is-sel .zx-sign-label { fill: var(--ink); font-weight: 600; }
+.zx-sign-bracket { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
+.zx-sign-int.is-sel .zx-sign-bracket { stroke: var(--lit); stroke-width: 3; }
+.zx-sign-end { opacity: 0.45; }
+.zx-sign-end.is-sel { opacity: 1; }
+.zx-sign-end line { stroke-width: 2; }
+.zx-sign-end.is-pos line, .zx-sign-end.is-pos circle { stroke: var(--formal); fill: var(--formal); }
+.zx-sign-end.is-neg line, .zx-sign-end.is-neg circle { stroke: var(--fail); fill: var(--fail); }
+.zx-sign figcaption, .zx-end-caption { font-size: var(--fs-sm); color: var(--ink-3); line-height: var(--lh-ui); max-width: 78ch; margin-top: var(--space-1); }
+
+.zx-ends { width: auto; }
+.zx-ends thead th { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); }
+.zx-ends th[scope="row"] { font-variant-numeric: tabular-nums; font-weight: 600; }
+.zx-ends td { font-family: var(--font-sans); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.zx-ends td.is-pos { color: var(--formal); }
+.zx-ends td.is-neg { color: var(--fail); }
+.zx-ends .zx-compare { margin: 0; white-space: nowrap; }
+.zx-map { height: min(80vh, 56rem); }
+.zx-sign-band { fill: color-mix(in oklab, var(--fail) 12%, transparent); }
+.zx-sign-bandlabel { fill: var(--fail); font-size: 0.72rem; font-family: var(--font-sans); opacity: 0.9; }
+.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--lit) 9%, transparent); }
+.zx-main { grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr); }
+.zx-tr { grid-template-columns: 3rem minmax(10.4rem, 1fr) 4.4rem 3.6rem; }
+@media (min-width: 2000px) { .zx-main { grid-template-columns: minmax(23rem, 28rem) 1fr; } }
+@media (max-width: 820px) {
+  .zx-main { grid-template-columns: minmax(0, 1fr); }
+  .zx-tr { grid-template-columns: 3rem minmax(0, 1fr) 4.2rem 3.4rem; }
+  .zx-tr > :nth-child(3) { display: revert; }
+  .zx-cert h2 { font-size: var(--fs-h2); }
+}
+.zx-sign-val { font-size: 0.8rem; font-family: var(--font-sans); font-weight: 600; font-variant-numeric: tabular-nums; }
+.zx-sign-end.is-pos .zx-sign-val { fill: var(--formal); stroke: none; }
+.zx-sign-end.is-neg .zx-sign-val { fill: var(--fail); stroke: none; }
+.zx-sign-int.is-sel .zx-sign-col { fill: color-mix(in oklab, var(--ink) 5%, transparent); stroke: color-mix(in oklab, var(--lit) 45%, transparent); stroke-dasharray: 3 3; }
+.zx-sign, .zx-sign-plot { min-width: 0; overflow: hidden; }
+.zx-detail, .zx-cert { min-width: 0; }
+.zx-howlean, .zx-sign figcaption, .zx-variant, .zx-end-caption { max-width: 64ch; }
+.zx-sign-int { min-height: 24px; }
+.zx-fig figcaption { max-width: 62ch; }

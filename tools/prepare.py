@@ -398,7 +398,7 @@ def simplify(tree):
                      "centre": dec(ce[0], 12, ROUND_FLOOR) if ce[0] >= 0 else dec(ce[0], 12, ROUND_CEILING),
                      "radius": dec(ce[1], 3, ROUND_CEILING)}
         if c == root:
-            label = "The certificate for this interval"
+            label = "Certificate: a zero in this interval"
         elif c in fields:
             f = nodes[root]["labels"][nodes[root]["children"].index(c)]
             label = FIELD_LABELS.get(f, f)

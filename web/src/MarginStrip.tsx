@@ -24,7 +24,7 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
   const [width, setWidth] = useState(800);
   const [hover, setHover] = useState<Pt | null>(null);
   const [scheme, setScheme] = useState(0);
-  const height = 220;
+  const height = 180;
 
   const pts = useMemo<Pt[]>(() => rows.map((r) => ({
     row: r.row,
@@ -121,16 +121,15 @@ export function MarginStrip({ rows, selected, onChoose }: { rows: Row[]; selecte
         />
         {hovered && hover && (
           <div className="zx-fig-tip" style={{ left: Math.min(Math.max(sx(hover.x), 120), width - 120), top: Math.max(sy(hover.y) - 52, 0) }}>
-            Interval {hovered.row.toLocaleString("en-GB")}, t in [{hovered.left}, {hovered.right}]<br />
+            Certificate {hovered.row.toLocaleString("en-GB")}, t in [{hovered.left}, {hovered.right}]<br />
             margin at least {hovered.marginShort}{hovered.variant === "C1" ? ", uses C₁" : hovered.variant === "EM" ? ", Euler–Maclaurin" : ""}
           </div>
         )}
       </div>
       <figcaption>
-        Every one of the {rows.length.toLocaleString("en-GB")} intervals: its height t across, and how far |Z̃| clears the error bound at the
-        closer end, on a log scale. <span className="zx-key zx-key--c1" aria-hidden="true" /> The 74 intervals whose certificate uses C₁,
-        always two neighbours sharing an end. <span className="zx-key zx-key--em" aria-hidden="true" /> The 52 Euler–Maclaurin intervals below
-        t = 149.5. Click a dot to open its interval.
+        Each dot is one certificate: across, its interval’s height t; up, on a log scale, how far |Z̃| exceeds the error bound at the
+        tighter end. <span className="zx-key zx-key--c1" aria-hidden="true" /> The 74 certificates that use the C₁ term.{" "}
+        <span className="zx-key zx-key--em" aria-hidden="true" /> The 52 Euler–Maclaurin certificates below t = 149.5. Click a dot to open it.
       </figcaption>
     </figure>
   );
