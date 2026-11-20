@@ -110,10 +110,9 @@ export function SignChart({ rows, row, onChoose }: { rows: Row[]; row: Row; onCh
         </svg>
       </div>
       <figcaption>
-        <b>Both endpoints clear the band, on opposite sides.</b> Certificate {row.row.toLocaleString("en-GB")} between its two neighbours, one
-        column each. Each bar is the proved range of Z̃ at an endpoint divided by the error bound there; the label gives that range. A bar
-        wholly outside the band from −1 to 1 fixes the sign of Z at that endpoint, and opposite signs at the two ends put a zero between them.
-        Outside the band the scale is logarithmic. Click an interval to open it.
+        <b>Both endpoints clear the band, on opposite sides.</b> Each bar is the proved range of Z̃ at an endpoint divided by the error bound
+        there. A bar wholly outside the band from −1 to 1 fixes the sign of Z at that endpoint, and opposite signs at the two ends put a zero
+        between them. The scale is logarithmic outside the band; click a column to open that certificate.
       </figcaption>
     </figure>
   );

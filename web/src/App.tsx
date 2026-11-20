@@ -103,13 +103,27 @@ export function App() {
         <section className="zx-detail" aria-label="The selected interval">
           {current && rows ? <Detail key={current.row} rows={rows} manifest={manifest} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} /> : <p className="zx-loading">Loading the certificates…</p>}
           <footer className="zx-foot">
-            <p>
-              The proof, its Lean and its data are Salvatore Mercuri and Bhavik Mehta’s (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0), built
-              here at commit {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} with {manifest?.provenance.toolchain ?? "Lean"}. A program read every
-              number on this page from the compiled proof and rounded it outward, so no interval is printed narrower and no margin larger than
-              the proof gives. Will Cook made the program and this page with AI, and the authors have not reviewed either.{" "}
-              <a href="https://github.com/wcook04/zeta-certificate-explorer">How it was made</a>.
-            </p>
+            <div>
+              <h3>The proof</h3>
+              <p>
+                Salvatore Mercuri and Bhavik Mehta’s, with its Lean and its data (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0), built here at
+                commit {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} with {manifest?.provenance.toolchain ?? "Lean"}.
+              </p>
+            </div>
+            <div>
+              <h3>The numbers</h3>
+              <p>
+                A program read every number on this page from the compiled proof and rounded it outward, so no interval is printed narrower and
+                no margin larger than the proof gives.
+              </p>
+            </div>
+            <div>
+              <h3>This page</h3>
+              <p>
+                Will Cook made the program and this page with AI, and the authors have not reviewed either.{" "}
+                <a href="https://github.com/wcook04/zeta-certificate-explorer">How it was made</a>.
+              </p>
+            </div>
           </footer>
         </section>
       </main>
@@ -321,7 +335,10 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
                 <style>{sealedCss}</style>
                 <div className="zx-map" ref={mapBox} onPointerMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPointer([e.clientX - r.left, e.clientY - r.top]); }} onPointerLeave={() => setHover(null)}>
                   <div className="zx-map-head">
-                    <h4>The proof term, as a graph</h4>
+                    <div className="zx-map-title">
+                      <h4>The proof term, as a graph</h4>
+                      <p className="zx-map-note">Hover a card for how Lean reached its value; click it for the full statement; the arrow under a card opens its inputs; drag to move, Ctrl-scroll to zoom. A second outline marks a lemma cited more than once.</p>
+                    </div>
                     <div className="zx-map-tools">
                       <div className="zx-seg" role="group" aria-label="Start the graph from one quantity">
                         <button type="button" aria-pressed={!focus} onClick={() => { setFocus(null); setCard(null); }}>Whole certificate</button>
@@ -352,7 +369,6 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
                   />
                   {hover && hover !== card && byId.get(hover) && <HoverCard card={byId.get(hover)!} at={pointer} />}
                   {card && byId.get(card) && <Inspector card={byId.get(card)!} onClose={() => setCard(null)} />}
-                  <p className="zx-map-note">Hover a card for how Lean reached its value; click it for the full statement; the arrow under a card opens its inputs. Drag to move, pinch or Ctrl-scroll to zoom. A second outline marks a lemma cited more than once.</p>
                 </div>
               </div>
             </div>
@@ -379,7 +395,14 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
           <SignChart rows={rows} row={row} onChoose={onChoose} />
           <div className="zx-checks-low">
             <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
-            <Variant row={row} />
+            <div className="zx-notes">
+              <p>
+                Z̃ is the approximation the certificate computes; its range comes from exact rational arithmetic in the proof. Adding the
+                error bound on both sides gives the range for Z, and the margin is how far that range stays from 0. Ranges are rounded
+                outward and margins downward.
+              </p>
+              <Variant row={row} />
+            </div>
           </div>
           {comparison !== null && neighbours[comparison] && (
             <EndpointComparison row={row} side={comparison} neighbour={neighbours[comparison]!} onClose={() => setComparison(null)} onChoose={onChoose} />
@@ -431,10 +454,6 @@ function Ends({ row, neighbours, onCompare }: { row: Row; neighbours: readonly (
           ))}
         </tbody>
       </table>
-      <p className="zx-end-caption">
-        Z̃ is the approximation the certificate computes. Its range comes from exact rational arithmetic in the proof. Adding the error bound on
-        both sides gives the range for Z. The margin is how far that range stays from 0. Ranges are rounded outward and margins downward.
-      </p>
     </div>
   );
 }
