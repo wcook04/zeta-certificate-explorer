@@ -16,7 +16,7 @@ type Filter = "all" | "c1" | "detail" | "em";
 
 const FILTERS: { id: Filter; label: string; test: (r: Row) => boolean }[] = [
   { id: "all", label: "All", test: () => true },
-  { id: "detail", label: "Proof opened", test: (r) => !!r.detail },
+  { id: "detail", label: "With proof tree", test: (r) => !!r.detail },
   { id: "c1", label: "Uses C₁", test: (r) => r.variant === "C1" },
   { id: "em", label: "E–M", test: (r) => r.method === "EM" },
 ];
@@ -66,19 +66,20 @@ export function App() {
       <a className="zx-skip" href="#intervals">Skip to the intervals</a>
       <header className="zx-head">
         <div className="zx-intro">
-          <p className="zx-kicker">A reader for the Lean verification of the Riemann hypothesis up to height 10,011</p>
+          <p className="zx-kicker">The certificates in the Lean proof that the Riemann hypothesis holds up to height 10,011</p>
           <h1>10,156 zero certificates, and how Lean checks them</h1>
           <p className="zx-lede">
             Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean proof</a> places a zero of ζ(½ + it) in each of 10,156 short intervals of t,
             by showing that Hardy’s Z function changes sign across the interval. In Python each check is a few lines of arithmetic. Lean’s kernel
-            is slow at arithmetic, so a metaprogram writes each certificate’s proof in a form the kernel can check quickly. This page lists every
-            certificate with the numbers read from the compiled proof, and for fourteen of them it opens that proof.
+            is slow at arithmetic, so the authors wrote a metaprogram that builds each certificate’s proof from lemmas whose side conditions
+            are comparisons between integers, which the kernel evaluates quickly. Every certificate is listed below with the numbers read from the compiled proof, and for
+            fourteen of them you can open the proof as a tree of the numbers it computes.
           </p>
           <nav className="zx-starts" aria-label="Places to start">
             <span className="zx-starts-h">Start with</span>
-            <a href="#/6710"><b>#6,710</b> a C₁ pair near t = 7005</a>
+            <a href="#/6710"><b>#6,710</b> near t = 7005, one of a pair that needed the C₁ term</a>
             <a href="#/53"><b>#53</b> the first Riemann–Siegel certificate</a>
-            <a href="#/1"><b>#1</b> the first, by Euler–Maclaurin</a>
+            <a href="#/1"><b>#1</b> the first, computed with Euler–Maclaurin</a>
           </nav>
         </div>
         <div className="zx-overview">{rows && <MarginStrip rows={rows} selected={selected} onChoose={choose} height={250} />}</div>
@@ -163,7 +164,7 @@ function Table({ rows, selected, onChoose }: { rows: Row[]; selected: number | n
         <span role="columnheader">Interval of t</span>
         <span role="columnheader">Formula</span>
         <span role="columnheader" title="How far |Z̃| exceeds the error bound at the tighter end, rounded down">Margin</span>
-        <span role="columnheader" aria-label="Proof opened" />
+        <span role="columnheader" aria-label="Has a proof tree" />
       </div>
       {selected != null && at < 0 && <p className="zx-away">#{fmt(selected)} is open but hidden by this filter.</p>}
       <div className="zx-scroll" ref={box} onScroll={(e) => setTop(e.currentTarget.scrollTop)}>
@@ -260,8 +261,8 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
     return () => window.clearTimeout(t);
   }, [graph, tree, focus]); // eslint-disable-line react-hooks/exhaustive-deps
   const jumpCards = tree ? [
-    { label: "Left approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the left end") },
-    { label: "Right approximation", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the right end") },
+    { label: "Z̃ at the left end", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the left end") },
+    { label: "Z̃ at the right end", card: tree.nodes.find((n) => n.value && n.label === "Z̃ at the right end") },
     { label: "Error bound", card: tree.nodes.find((n) => n.value && n.label.startsWith("error bound")) },
   ].filter((x) => !!x.card) : [];
 
@@ -311,7 +312,7 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
               <dd><span className="zx-verdict-sign">{e.sign === "+" ? "> 0" : "< 0"}</span><span>in [{e.trueZ[0]}, {e.trueZ[1]}]</span></dd>
             </div>
           ))}
-          <p>Smallest distance from 0: <b>{row.marginShort}</b></p>
+          <p>Z stays at least <b>{row.marginShort}</b> away from 0 at both ends</p>
         </dl>
       </header>
 
@@ -321,8 +322,9 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
         <h3 id="how" className="zx-section">How Lean checks this certificate</h3>
         <p className="zx-prose">
           In Python the two checks at the end of this page take a few lines and a fraction of a second. Lean’s kernel is slow at arithmetic,
-          and the sums get longer with height, so the metaprogram builds the proof in a form the kernel can check quickly.
-          {row.detail ? " Four techniques from its source follow, each with its count in this certificate and one place it occurs, which opens in the proof graph." : null}
+          and the sums get longer with height, so the metaprogram builds the proof from lemmas whose side conditions are comparisons between
+          integers, which the kernel evaluates quickly.
+          {row.detail ? " Below are four techniques from the metaprogram’s source, how many times each is used in this certificate’s proof, and one place it is used, which you can open in the tree." : null}
         </p>
         </div>
         {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
@@ -337,7 +339,7 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
                   <div className="zx-map-head">
                     <div className="zx-map-title">
                       <h4>The proof term, as a graph</h4>
-                      <p className="zx-map-note">Hover a card for how Lean reached its value; click it for the full statement; the arrow under a card opens its inputs; drag to move, Ctrl-scroll to zoom. A second outline marks a lemma cited more than once.</p>
+                      <p className="zx-map-note">Hover over a box to see the interval proved for its number and the lemma that proves it. Click a box for the full Lean statement, and click the arrow under a box to show the numbers it is computed from. Drag to move and Ctrl-scroll to zoom. A box with a second outline is a lemma used more than once.</p>
                     </div>
                     <div className="zx-map-tools">
                       <div className="zx-seg" role="group" aria-label="Start the graph from one quantity">
@@ -383,7 +385,7 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
             </p>
             <p>
               Open <a href="#/6710">#6,710</a> (Riemann–Siegel with C₁), <a href="#/53">#53</a> (Riemann–Siegel) or <a href="#/1">#1</a>{" "}
-              (Euler–Maclaurin), or list all fourteen with the “Proof opened” filter.
+              (Euler–Maclaurin), or list all fourteen with the “With proof tree” filter.
             </p>
           </div>
         )}
@@ -397,9 +399,9 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
             <Ends row={row} neighbours={neighbours} onCompare={setComparison} />
             <div className="zx-notes">
               <p>
-                Z̃ is the approximation the certificate computes; its range comes from exact rational arithmetic in the proof. Adding the
-                error bound on both sides gives the range for Z, and the margin is how far that range stays from 0. Ranges are rounded
-                outward and margins downward.
+                Z̃ is the approximation the certificate computes, and the proof encloses it in the range shown using exact rational
+                arithmetic. Adding the error bound on both sides gives the range for Z. The margin is how far the range for Z stays from 0.
+                Ranges are rounded outward and margins downward.
               </p>
               <Variant row={row} />
             </div>
@@ -464,7 +466,7 @@ function EndpointComparison({ row, side, neighbour, onClose, onChoose }: { row: 
   return (
     <section className="zx-comparison" aria-label="Two certificates at the same endpoint">
       <div className="zx-row-nav"><h3>Same height, two certificates: t = {height}</h3><button type="button" onClick={onClose} aria-label="Close endpoint comparison">Close</button></div>
-      <p>These adjacent intervals meet here. Each certificate proves the sign at this height; its approximation and bound may differ.</p>
+      <p>Both certificates end at this height, and each proves the sign of Z here with its own approximation and error bound.</p>
       <div className="zx-end-wrap"><table className="zx-ends"><thead><tr><th>Interval</th><th>Formula</th><th>Approximation Z̃(t)</th><th>Error at most</th><th>Distance from 0, at least</th></tr></thead>
         <tbody>{entries.map(({ row: r, end }) => <tr key={r.row}>
           <th scope="row">{r.row === row.row ? fmt(r.row) : <button className="zx-compare" type="button" onClick={() => onChoose(r.row)}>{fmt(r.row)} →</button>}</th>
@@ -481,12 +483,12 @@ function HoverCard({ card, at }: { card: CertCard; at: [number, number] }) {
     <div className="zx-hover" style={{ left: at[0] + 16, top: at[1] + 16 }} role="tooltip">
       <strong>{card.label}</strong>
       {card.value && <span>in [{card.value.lo}, {card.value.hi}]</span>}
-      <span>Proved by <code>{card.head.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "sealed $1").replace(/^(Enclosure|BSN|Zeta\.Certificates)\./, "")}</code>{card.stepCount ? `, after ${card.stepCount} steps on the same value` : ""}</span>
-      {card.sealed && <span>Proved once as a separate lemma{card.citedBy > 1 ? `, cited by ${card.citedBy} quantities` : ""}</span>}
-      {card.recentred && <span>Re-centred from {card.recentred[0]} digits to {card.recentred[1]}</span>}
-      {checks > 0 && <span>{checks} Boolean check{checks > 1 ? "s" : ""} on numerals that the kernel evaluates, the longest numeral {card.kernelLiteralDigits} digits</span>}
+      <span>Proved by <code>{card.head.replace(/^_private\..*\.(_proof_\d+_\d+)$/, "sealed $1").replace(/^(Enclosure|BSN|Zeta\.Certificates)\./, "")}</code>{card.stepCount ? `, after ${card.stepCount} more lemmas applied to the same number` : ""}</span>
+      {card.sealed && <span>Proved once as a separate lemma{card.citedBy > 1 ? `, used by ${card.citedBy} other boxes` : ""}</span>}
+      {card.recentred && <span>Rewritten with shorter fractions, from {card.recentred[0]} digits to {card.recentred[1]} across its four integers</span>}
+      {checks > 0 && <span>The kernel evaluates {checks} integer comparison{checks > 1 ? "s" : ""} here, the longest integer {card.kernelLiteralDigits} digits long</span>}
       {card.checkExamples[0] && <code className="zx-hover-ex">{shortLiterals(card.checkExamples[0])}</code>}
-      {card.digits > 0 && <span>The enclosure is written with {card.digits} digits</span>}
+      {card.digits > 0 && <span>Its interval is written with {card.digits} digits in total</span>}
       <em>Click for the full statement.</em>
     </div>
   );
@@ -503,10 +505,10 @@ function Variant({ row }: { row: Row }) {
   return (
     <p className="zx-variant">
       {row.variant === "C1"
-        ? "The builder first tries the Riemann–Siegel formula without the C₁ term, and the certificate saved here uses the formula with it. Only 74 of the 10,104 Riemann–Siegel certificates do, always in neighbouring pairs that share an endpoint. "
-        : "Riemann–Siegel formula without the C₁ term, the version the builder tries first. "}
+        ? "The certificate builder first tries the Riemann–Siegel formula without the C₁ term, and this certificate uses the formula with it. Only 74 of the 10,104 Riemann–Siegel certificates use C₁, always in neighbouring pairs that share an endpoint. "
+        : "Riemann–Siegel formula without the C₁ term, which the certificate builder tries first. "}
       {sameBound
-        ? <>Both endpoints use one error bound, proved at t = {row.ends[0].boundAt}, the lowest height in its batch of certificates; the bound decreases with t, so it holds at both endpoints.</>
+        ? <>Both endpoints use one error bound, proved at t = {row.ends[0].boundAt}, the lowest height in its batch of certificates. The bound decreases with t, so it holds at both endpoints.</>
         : <>The left error bound was proved at t = {row.ends[0].boundAt ?? row.left} and the right one at t = {row.ends[1].boundAt ?? row.right}.</>}
     </p>
   );
@@ -530,10 +532,10 @@ function Inspector({ card, onClose }: { card: CertCard; onClose(): void }) {
           Proved to lie in <b>[{card.value.lo}, {card.value.hi}]</b>
         </p>
       )}
-      {card.kind === "group" && <p className="zx-how">These are separate fields of the certificate, drawn as one card here.</p>}
+      {card.kind === "group" && <p className="zx-how">These are separate fields of the certificate, drawn as one box here.</p>}
       {card.steps.length > 0 && (
         <>
-          <h4>{card.kind === "group" ? "The conditions" : `How Lean reached this value (${card.stepCount + 1} steps)`}</h4>
+          <h4>{card.kind === "group" ? "The conditions" : `The lemmas applied to this number (${card.stepCount + 1})`}</h4>
           <p className="zx-chain">
             {card.kind === "group"
               ? card.steps.map((s) => s.statement).join("; ")
@@ -544,7 +546,7 @@ function Inspector({ card, onClose }: { card: CertCard; onClose(): void }) {
       )}
       {checks > 0 && (
         <>
-          <h4>What the kernel computes here ({checks})</h4>
+          <h4>Integer comparisons the kernel evaluates ({checks})</h4>
           <ul className="zx-checks">
             {card.checks.map((c, i) => (
               <li key={i}>{c.count} × <code>{c.head.replace(/^Enclosure\./, "").replace(/^BSN\./, "") || "—"}</code>, {CHECK_WORDS[c.kind] ?? c.kind}</li>

@@ -51,7 +51,7 @@ export function Metaprogram({ tree, onShow }: { tree: CertTree; onShow(id: strin
     <ol className="zx-tech">
       <li>
         <Count n={quantities} label="enclosed quantities" />
-        <h4>Every real number is four natural numbers</h4>
+        <h4>Each real number is given by four natural numbers</h4>
         <p>
           Each quantity x is proved to satisfy |x − (±cn/cd)| ≤ rn/rd with four numerals (<Src path="Enclosure/Core.lean" line={23}>Real.IsNear</Src>),
           and interval arithmetic combines these enclosures. An equation is used only to move an enclosure from one expression to another
@@ -62,10 +62,10 @@ export function Metaprogram({ tree, onShow }: { tree: CertTree; onShow(id: strin
         </Example>
       </li>
       <li>
-        <Count n={s.kernelChecks} label="Boolean checks" />
+        <Count n={s.kernelChecks} label="integer comparisons" />
         <h4>Every inequality is a Boolean on numerals</h4>
         <p>
-          Side conditions are stated with <code>Nat.ble</code>, <code>Nat.beq</code>, <code>Nat.mul</code> and the like and proved by{" "}
+          Side conditions are stated with <code>Nat.ble</code>, <code>Nat.beq</code>, <code>Nat.mul</code> and other functions on natural numbers and proved by{" "}
           <code>rfl</code>, so the kernel decides them with its built-in numeral arithmetic and never unfolds a real number.{" "}
           <Src path="Enclosure/Defs.lean" line={31}>recentreOk</Src> puts the six conditions of a re-centring into one Boolean.
         </p>
