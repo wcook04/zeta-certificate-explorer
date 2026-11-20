@@ -1,0 +1,112 @@
+# Build Salvatore Mercuri and Bhavik Mehta's smmercuri/zeta (the height 10,011 case), then read
+# the proof trees of a few zero certificates out of the compiled batches, plus an elaboration
+# profile of one batch. Run by hand; the reports are uploaded for review, not published.
+name: Zeta certificate trees
+on:
+  push:
+    branches: [claude/zeta-certificate-trees-20261120]
+    paths: ['tools/zeta/**', '.github/workflows/zeta-trees.yml']
+  workflow_dispatch:
+    inputs:
+      zeta_ref:
+        description: smmercuri/zeta commit
+        default: 34037d5a7662e2eb6e970bfb22299c84e45ed5d9
+      rows:
+        description: certificates per method
+        default: "3"
+permissions:
+  contents: read
+jobs:
+  trees:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - name: Free runner disk
+        run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: self
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: smmercuri/zeta
+          ref: ${{ inputs.zeta_ref || '34037d5a7662e2eb6e970bfb22299c84e45ed5d9' }}
+          path: zeta
+      - name: Install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Restore an earlier build, if saved
+        uses: actions/cache/restore@v4
+        with:
+          path: zeta/.lake
+          key: zeta-lake-${{ inputs.zeta_ref || '34037d5a7662e2eb6e970bfb22299c84e45ed5d9' }}-${{ github.run_id }}
+          restore-keys: zeta-lake-${{ inputs.zeta_ref || '34037d5a7662e2eb6e970bfb22299c84e45ed5d9' }}-
+      - name: Fetch Mathlib's compiled files
+        working-directory: zeta
+        run: lake exe cache get
+      - name: Build the height 10,011 theorem
+        working-directory: zeta
+        run: |
+          set -o pipefail
+          /usr/bin/time -v lake build Zeta.Main 2>&1 | tee "$RUNNER_TEMP/build.log" | { grep -v '^✔' || true; }
+      - name: Save the build
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: zeta/.lake
+          key: zeta-lake-${{ inputs.zeta_ref || '34037d5a7662e2eb6e970bfb22299c84e45ed5d9' }}-${{ github.run_id }}
+      - name: Summarise every batch and dump the chosen rows in full
+        working-directory: zeta
+        env:
+          OUT: ${{ runner.temp }}/out/certificates
+        run: |
+          mkdir -p "$OUT"
+          detail_for() {
+            case "$1" in
+              EulerMaclaurin/Batch0001) echo "0,1,2,51" ;;
+              RiemannSiegel/Batch0001) echo "0,1,2,199" ;;
+              RiemannSiegel/Batch0002) echo "0" ;;
+              RiemannSiegel/Batch0034) echo "56,57" ;;
+              RiemannSiegel/Batch0037) echo "83" ;;
+              RiemannSiegel/Batch0051) echo "102,103" ;;
+              *) echo "" ;;
+            esac
+          }
+          for f in Zeta/Zeros/Certificates/EulerMaclaurin/Batch*.lean Zeta/Zeros/Certificates/RiemannSiegel/Batch*.lean; do
+            rel=${f#Zeta/Zeros/Certificates/}; rel=${rel%.lean}
+            mod=$(echo "Zeta/Zeros/Certificates/$rel" | tr '/' '.')
+            case "$rel" in EulerMaclaurin/*) method=euler_maclaurin ;; *) method=riemann_siegel ;; esac
+            ns=$(echo "Zeta.Certificates.$rel" | tr '/' '.')
+            { echo "import $mod"; grep -v '^import ' ../self/tools/zeta/TreeDump.lean; cat ../self/tools/zeta/ExtractZeta.lean; } > Extract_one.lean
+            echo "== $rel"
+            ZETA_BATCH="$ns.batch" ZETA_METHOD=$method ZETA_DETAIL=$(detail_for "$rel") ZETA_OUT="$OUT" \
+              lake env lean Extract_one.lean > "$RUNNER_TEMP/one.log" 2>&1 \
+              || echo "$rel failed" >> "$RUNNER_TEMP/failed_batches"
+            grep -v "warning: Variable\|^Hint\|^Note:\|apply\]\|^$" "$RUNNER_TEMP/one.log" | tee -a "$RUNNER_TEMP/extract.log" || true
+          done
+          cp Extract_one.lean "$RUNNER_TEMP/out/ExtractZeta_assembled_example.lean"
+          ls "$OUT" | wc -l
+      - name: Profile the first batch of each method, with phase messages
+        if: always()
+        working-directory: zeta
+        run: |
+          mkdir -p "$RUNNER_TEMP/out/profile"
+          for f in Zeta/Zeros/Certificates/EulerMaclaurin/Batch0001.lean Zeta/Zeros/Certificates/RiemannSiegel/Batch0034.lean; do
+            n=$(echo "$f" | tr '/' '_' | sed 's/.lean$//')
+            ( time lake env lean -Dtrace.profiler=true -Dtrace.BSN.phases=true -Dtrace.profiler.output.pp=true \
+                -Dtrace.profiler.output="$RUNNER_TEMP/out/profile/$n.firefox.json" "$f" ) \
+              > "$RUNNER_TEMP/out/profile/$n.trace.txt" 2>&1 || echo "profile $f failed" >> "$RUNNER_TEMP/out/profile/failed"
+          done
+          python3 ../self/tools/zeta/profile_summary.py "${{ github.run_id }}" "$RUNNER_TEMP"/out/profile/*.firefox.json > "$RUNNER_TEMP/out/profile/summary.json"
+      - name: Collect
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "$RUNNER_TEMP"/build.log "$RUNNER_TEMP"/extract.log "$RUNNER_TEMP/out/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/failed_batches" "$RUNNER_TEMP/out/" 2>/dev/null || true
+          { echo "run_id ${{ github.run_id }}"; echo "self_sha ${{ github.sha }}"; (cd zeta && echo "zeta $(git rev-parse HEAD)" && echo "toolchain $(cat lean-toolchain)"); } > "$RUNNER_TEMP/out/provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zeta-certificate-trees
+          path: ${{ runner.temp }}/out

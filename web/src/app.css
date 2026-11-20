@@ -1,0 +1,93 @@
+/* The explorer's own layout. Colours, type and spacing are Proof Reader's tokens
+   (styles/tokens.css); the map keeps its own stylesheet (map/tree.css). */
+
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font-sans); }
+
+.zx { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; }
+.zx a { color: var(--formal); }
+
+.zx-head { padding: var(--space-5) var(--space-6) var(--space-3); max-width: 78rem; }
+.zx-head h1 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h1); margin: 0 0 var(--space-2); line-height: var(--lh-tight); }
+.zx-lede { font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); max-width: 62rem; margin: 0; color: var(--ink-2); }
+
+.zx-main { display: grid; grid-template-columns: minmax(24rem, 30rem) 1fr; gap: var(--space-4); padding: var(--space-3) var(--space-6) var(--space-4); min-height: 0; height: calc(100vh - 11.5rem); }
+
+.zx-table { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); }
+.zx-filters { display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-2); border-bottom: 1px solid var(--rule); }
+.zx-filters button { font: inherit; font-size: var(--fs-ui); padding: 0.3rem 0.65rem; border: 1px solid var(--rule-control); border-radius: 999px; background: var(--raised); color: var(--ink); cursor: pointer; }
+.zx-filters button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.zx-count { margin-left: 0.4rem; font-variant-numeric: tabular-nums; opacity: 0.7; }
+
+.zx-grid { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.zx-tr { display: grid; grid-template-columns: 3.4rem minmax(11.5rem, 1fr) 7.4rem 4rem; align-items: center; gap: var(--space-2); padding: 0 var(--space-3); height: 34px; box-sizing: border-box; font-size: var(--fs-ui); }
+.zx-th { white-space: nowrap; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--ink-3); border-bottom: 1px solid var(--rule); }
+.zx-scroll { overflow-y: auto; flex: 1; min-height: 0; }
+.zx-scroll .zx-tr { position: absolute; left: 0; right: 0; width: 100%; border: 0; border-bottom: 1px solid color-mix(in oklab, var(--rule) 55%, transparent); background: none; color: inherit; font: inherit; font-size: var(--fs-ui); text-align: left; cursor: pointer; }
+.zx-scroll .zx-tr:hover { background: var(--sunk); }
+.zx-scroll .zx-tr.is-selected { background: var(--lit-wash); box-shadow: inset 3px 0 0 var(--lit); }
+.zx-scroll .zx-tr.is-c1 span:nth-child(3) { color: var(--formal); font-weight: 600; }
+.zx-num { font-variant-numeric: tabular-nums; text-align: right; }
+.zx-t { font-family: var(--font-mono); font-size: var(--fs-sm); white-space: nowrap; }
+.zx-dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--lit); margin-left: 0.4rem; vertical-align: middle; }
+
+.zx-detail { min-height: 0; overflow-y: auto; border: 1px solid var(--rule); border-radius: var(--radius-m); background: var(--surface); padding: var(--space-4) var(--space-5); }
+.zx-cert { display: flex; flex-direction: column; gap: var(--space-3); min-height: 100%; }
+.zx-cert h2, .zx-welcome h2 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h2); margin: 0; }
+.zx-welcome p, .zx-variant, .zx-nodetail { font-family: var(--font-serif); font-size: var(--fs-read); line-height: var(--lh-read); max-width: 52rem; margin: 0; color: var(--ink-2); }
+.zx-starts { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+.zx-starts button { font: inherit; font-size: var(--fs-base); text-align: left; background: var(--raised); border: 1px solid var(--rule-control); border-radius: var(--radius-s); padding: var(--space-2) var(--space-3); color: var(--ink); cursor: pointer; }
+
+.zx-ends { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--fs-base); }
+.zx-ends th, .zx-ends td { padding: 0.35rem 0.9rem 0.35rem 0; text-align: left; border-bottom: 1px solid var(--rule); }
+.zx-ends thead th { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--ink-3); font-weight: 600; }
+.zx-ends td { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.zx-ends td.is-neg::before { content: "− "; color: var(--fail); font-family: var(--font-sans); }
+.zx-ends td.is-pos::before { content: "+ "; color: var(--formal); font-family: var(--font-sans); }
+.zx-at { font-family: var(--font-sans); color: var(--ink-3); }
+
+.zx-work { display: grid; grid-template-columns: 1fr; gap: var(--space-3); flex: 1; min-height: max(36rem, 72vh); }
+.zx-map { position: relative; display: flex; flex-direction: column; min-height: max(36rem, 72vh); border: 1px solid var(--rule); border-radius: var(--radius-s); background: var(--ground); overflow: hidden; }
+.zx-map > :last-child { flex: 1; min-height: 0; position: relative; }
+.zx-map-note { margin: 0; padding: var(--space-2) var(--space-3); font-size: var(--fs-sm); color: var(--ink-2); border-bottom: 1px solid var(--rule); background: var(--surface); }
+
+.zx-inspect { border: 1px solid var(--rule); border-radius: var(--radius-s); padding: var(--space-3); overflow-y: auto; max-height: 40rem; font-size: var(--fs-ui); background: var(--raised); }
+.zx-inspect--empty { color: var(--ink-3); }
+.zx-inspect h3 { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: 0 0 var(--space-2); }
+.zx-inspect h4 { font-size: var(--fs-sm); margin: var(--space-3) 0 var(--space-1); }
+.zx-inspect code, .zx-example { font-family: var(--font-mono); font-size: var(--fs-xs); }
+.zx-subject code { word-break: break-word; }
+.zx-value b { font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-sm); }
+.zx-steps, .zx-checks { padding-left: 1.2rem; margin: var(--space-1) 0; }
+.zx-example { white-space: pre-wrap; word-break: break-all; background: var(--sunk); padding: var(--space-2); border-radius: var(--radius-s); max-height: 14rem; overflow: auto; }
+details summary { cursor: pointer; color: var(--formal); margin-top: var(--space-2); }
+
+.zx-foot { padding: var(--space-3) var(--space-6) var(--space-5); font-size: var(--fs-sm); color: var(--ink-3); max-width: 78rem; line-height: var(--lh-ui); }
+.zx-error { color: var(--fail); padding: 0 var(--space-6); }
+
+@media (min-width: 1680px) {
+  .zx-work { grid-template-columns: 1fr 20rem; }
+}
+.zx-inspect { max-height: none; }
+@media (min-width: 1680px) { .zx-inspect { max-height: max(36rem, 72vh); } }
+@media (max-width: 820px) {
+  .zx-head, .zx-main, .zx-foot { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .zx-main { grid-template-columns: 1fr; height: auto; }
+  .zx-table { height: 60vh; }
+  .zx-main { grid-template-columns: minmax(0, 1fr); }
+  .zx-tr { grid-template-columns: 3rem minmax(0, 1fr) 3.4rem; font-size: var(--fs-sm); padding: 0 var(--space-2); }
+  .zx-tr > :nth-child(3) { display: none; }
+  .zx-scroll .zx-tr.is-c1 .zx-t { color: var(--formal); font-weight: 600; }
+  .zx-t { font-size: var(--fs-xs); }
+  .zx-detail { padding: var(--space-3); }
+  .zx-head h1 { font-size: var(--fs-h2); }
+  .zx-ends { font-size: var(--fs-sm); display: block; overflow-x: auto; }
+}
+
+/* Large monitors: the whole page reads larger rather than leaving the panels sparse. */
+@media (min-width: 2000px) {
+  html { font-size: 118.75%; }
+  .zx-head, .zx-foot { max-width: 96rem; }
+  .zx-lede { max-width: 80rem; }
+  .zx-main { grid-template-columns: minmax(26rem, 32rem) 1fr; }
+}
