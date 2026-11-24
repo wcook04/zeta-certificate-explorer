@@ -144,9 +144,9 @@ export function SizeChart({ sizes, row }: { sizes: Manifest["sizes"]; row: numbe
         {open && <text x={sx(Number(open.t)) - 10} y={sy(open.steps) - 12} textAnchor="end" className="zx-size-label">#{fmt(open.row)}: {fmt(open.steps)}</text>}
       </svg>
       <figcaption>
-        <b>Proof size against height.</b> The number of distinct proof steps in each of the fourteen certificates with a proof tree, against the height t of its interval, both axes logarithmic. <span className="zx-key zx-key--em" />{" "}
-        Euler–Maclaurin: about 22,000 steps. <span className="zx-key zx-key--rs" /> Riemann–Siegel: from 730 at t = 149.5 to about 2,800 at
-        t = 10,000, as the main sum grows from 4 to 39 terms.
+        <b>Proof size against height.</b> Each point shows the number of distinct proof steps for a saved tree.
+        Both axes are logarithmic. <span className="zx-key zx-key--em" /> Euler–Maclaurin.{" "}
+        <span className="zx-key zx-key--rs" /> Riemann–Siegel.
       </figcaption>
     </figure>
   );

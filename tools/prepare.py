@@ -14,17 +14,18 @@ Every number is computed here with exact rationals from the integers in the proo
 rounded outward (an interval is widened, a margin rounded down), so a printed figure never claims
 more than the proof shows. Nothing is computed in the browser.
 
-Usage: prepare.py RUN_DIR OUT_DIR
+Usage: prepare.py RUN_DIR OUT_DIR [--expected-rows N --verified-height T]
 """
+import argparse
 import json
 import re
-import sys
 from collections import defaultdict
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, getcontext
 from fractions import Fraction
 from pathlib import Path
 
 getcontext().prec = 80
+ORIGINAL_REVISION = "34037d5a7662e2eb6e970bfb22299c84e45ed5d9"
 
 
 # ---------- exact numbers ----------
@@ -145,6 +146,45 @@ def catalogue(run):
         # Shorten an already conservative decimal by flooring again, never round-to-nearest.
         r["marginShort"] = dec(min(Fraction(e["margin"]) for e in r["ends"]), 2, ROUND_FLOOR)
     return rows, checks
+
+
+def validate_catalogue(rows, manifest):
+    """Check coverage, provenance and the public decimal enclosures."""
+    if not re.fullmatch(r"[0-9a-f]{40}", manifest["provenance"]["zeta"]):
+        raise ValueError("the catalogue needs a full upstream commit SHA")
+    if not rows or len(rows) != manifest["rows"] or manifest["margins_checked"] != 2 * len(rows):
+        raise ValueError("catalogue row or endpoint count disagrees with its manifest")
+    intervals = set()
+    previous = None
+    detailed = []
+    variants = {v: 0 for v in ("EM", "C0", "C1")}
+    for i, row in enumerate(rows, 1):
+        key = row["method"], row["batch"], row["offset"]
+        left, right = Fraction(row["left"]), Fraction(row["right"])
+        if row["row"] != i or key in intervals or left >= right or (previous is not None and left < previous):
+            raise ValueError(f"invalid position, duplicate source or overlapping interval at row {i}")
+        intervals.add(key)
+        previous = right
+        variants[row["variant"]] += 1
+        if row.get("detail"):
+            detailed.append(i)
+        if len(row["ends"]) != 2 or {end["sign"] for end in row["ends"]} != {"+", "-"}:
+            raise ValueError(f"opposite endpoint signs required at row {i}")
+        for end in row["ends"]:
+            approx_low, approx_high = map(Fraction, end["z"])
+            true_low, true_high = map(Fraction, end["trueZ"])
+            # The extended enclosure and error bound were rounded separately.
+            if not (true_low <= approx_low <= approx_high <= true_high):
+                raise ValueError(f"inconsistent value enclosures at row {i}")
+            if Fraction(end["bound"]) < 0 or Fraction(end["margin"]) <= 0:
+                raise ValueError(f"invalid certified error or sign margin at row {i}")
+            if (end["sign"] == "+" and true_low <= 0) or (end["sign"] == "-" and true_high >= 0):
+                raise ValueError(f"true Z enclosure does not certify its sign at row {i}")
+    if variants != manifest["variants"] or detailed != manifest["detailed"]:
+        raise ValueError("variant or proof-tree inventory disagrees with the manifest")
+    height = Fraction(manifest["verified_height"])
+    if not 0 < height <= previous:
+        raise ValueError("verified height is outside the catalogue")
 
 
 # ---------- trees ----------
@@ -504,11 +544,29 @@ def simplify(tree):
 
 
 def main():
-    run, out = Path(sys.argv[1]), Path(sys.argv[2])
-    (out / "trees").mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("run", type=Path)
+    parser.add_argument("out", type=Path)
+    parser.add_argument("--expected-rows", type=int, help="row count from the upstream proof")
+    parser.add_argument("--verified-height", help="height from the upstream theorem")
+    args = parser.parse_args()
+    run, out = args.run, args.out
+    prov = dict(l.split(" ", 1) for l in (run / "provenance.txt").read_text().splitlines() if " " in l)
+    expected_rows, verified_height = args.expected_rows, args.verified_height
+    if prov["zeta"] == ORIGINAL_REVISION:
+        expected_rows = 10156 if expected_rows is None else expected_rows
+        verified_height = "10011" if verified_height is None else verified_height
+    if not expected_rows or not verified_height:
+        parser.error("another release requires --expected-rows and --verified-height from its upstream proof")
+    failed = run / "failed_batches"
+    if failed.exists() and failed.read_text().strip():
+        raise ValueError(f"the extractor reported failed batches in {failed}")
+    if (run / "partial_batches").exists():
+        raise ValueError("extraction contains selected batches only")
     rows, checks = catalogue(run)
-    assert len(rows) == 10156, len(rows)
-    assert checks["nonpositive"] == 0, checks
+    if len(rows) != expected_rows or checks["nonpositive"]:
+        raise ValueError(f"expected {expected_rows} intervals, got {len(rows)} with {checks['nonpositive']} nonpositive endpoint margins")
+    (out / "trees").mkdir(parents=True, exist_ok=True)
     index = {(r["method"], r["batch"], r["offset"]): r for r in rows}
     details = []
     sizes = []
@@ -517,7 +575,8 @@ def main():
         method = "EM" if t["method"] == "euler_maclaurin" else "RS"
         batch = int(re.search(r"Batch(\d+)", t["batch_theorem"]).group(1))
         r = index[(method, batch, t["offset"])]
-        assert tval(t["interval"]["left"]) == r["left"], (f, r["left"])
+        if (tval(t["interval"]["left"]), tval(t["interval"]["right"])) != (r["left"], r["right"]) or r.get("detail"):
+            raise ValueError(f"unexpected source coordinates or duplicate tree in {f}")
         HEIGHTS[:] = [r["left"], r["right"]] + [e["boundAt"] for e in r["ends"] if e["boundAt"]]
         g = simplify(t["tree"])
         g.update(row=r["row"], method=method, variant=r["variant"], left=r["left"], right=r["right"],
@@ -527,12 +586,12 @@ def main():
         details.append((r["row"], len(g["nodes"]), g["rawNodes"]))
         sizes.append({"row": r["row"], "method": method, "t": r["left"], "steps": g["stats"]["proofSteps"],
                       "kernelChecks": g["stats"]["kernelChecks"], "sealed": g["stats"]["sealedLemmas"]})
-    (out / "catalogue.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")))
-    prov = dict(l.split(" ", 1) for l in (run / "provenance.txt").read_text().splitlines() if " " in l)
     manifest = {"rows": len(rows), "detailed": sorted(d[0] for d in details),
                 "variants": {v: sum(1 for r in rows if r["variant"] == v) for v in ("EM", "C0", "C1")},
                 "margins_checked": checks["margins"], "provenance": prov,
-                "sizes": sorted(sizes, key=lambda s: s["row"])}
+                "sizes": sorted(sizes, key=lambda s: s["row"]), "verified_height": verified_height}
+    validate_catalogue(rows, manifest)
+    (out / "catalogue.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")))
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1))
     print(json.dumps(manifest["variants"]), "details (row, cards, proof nodes):", details)
 

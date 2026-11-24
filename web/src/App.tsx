@@ -9,6 +9,9 @@ import type { CertCard, CertTree, Manifest, Row } from "./types";
 
 const DATA = `${import.meta.env.BASE_URL}data`;
 const REPO = "https://github.com/smmercuri/zeta";
+const ORIGINAL = "34037d5a7662e2eb6e970bfb22299c84e45ed5d9";
+const PAPER = import.meta.env.VITE_PAPER_FILE;
+const EVIDENCE = "https://github.com/wcook04/zeta-proof-evidence/blob/b549e6615098ea13db0d746c6cc34198161e00fe";
 const ROW_H = 34;
 const INSETS = { top: 12, right: 12, bottom: 12, left: 12 };
 
@@ -29,11 +32,38 @@ const VARIANT_WORDS: Record<Row["variant"], string> = {
 const VARIANT_SHORT: Record<Row["variant"], string> = { EM: "E–M", C0: "R–S", C1: "R–S + C₁" };
 
 function readRow(): number | null {
-  const m = /^#\/(\d+)/.exec(window.location.hash);
-  return m ? Number(m[1]) : 6710;
+  const m = /^#\/(\d+)$/.exec(window.location.hash);
+  return m ? Number(m[1]) : null;
 }
 
 const fmt = (n: number) => n.toLocaleString("en-GB");
+
+function batchSource(revision: string, row: Row) {
+  const method = row.method === "EM" ? "EulerMaclaurin" : "RiemannSiegel";
+  return `${REPO}/blob/${revision}/Zeta/Zeros/Certificates/${method}/Batch${String(row.batch).padStart(4, "0")}.lean`;
+}
+
+function CatalogueDownloads({ manifest }: { manifest: Manifest }) {
+  const revision = manifest.provenance.zeta;
+  const base = `${import.meta.env.BASE_URL}downloads/${revision}`;
+  return (
+    <section className="zx-downloads" aria-labelledby="catalogue-downloads">
+      <div>
+        <h2 id="catalogue-downloads">Download the catalogue</h2>
+        <p>{fmt(manifest.rows)} certified intervals with exact decimal endpoints.{" "}
+          <a href={`${base}/README.txt`}>Provenance, columns and licence</a>.
+          {PAPER && <>{" "}<a href={`${import.meta.env.BASE_URL}${PAPER}`}>Working paper</a>.</>}
+        </p>
+      </div>
+      <nav className="zx-starts" aria-label="Catalogue downloads">
+        <a href={`${base}/zero-intervals.csv`} download>Zero intervals CSV</a>
+        <a href={`${base}/certificates.csv`} download>Full certificates CSV</a>
+        <a href={`${base}/catalogue.json`} download>Full JSON dataset</a>
+        <a href={`${base}/certificate-evidence.zip`} download>Certificate evidence ZIP</a>
+      </nav>
+    </section>
+  );
+}
 
 export function App() {
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -43,7 +73,12 @@ export function App() {
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
-    Promise.all([fetch(`${DATA}/catalogue.json`).then((r) => r.json()), fetch(`${DATA}/manifest.json`).then((r) => r.json())])
+    const load = async (file: string) => {
+      const response = await fetch(`${DATA}/${file}`);
+      if (!response.ok) throw new Error(`${file} returned HTTP ${response.status}`);
+      return response.json();
+    };
+    Promise.all([load("catalogue.json"), load("manifest.json")])
       .then(([c, m]) => {
         setRows(c as Row[]);
         setManifest(m as Manifest);
@@ -59,33 +94,36 @@ export function App() {
   }, []);
 
   const shown = useMemo(() => (rows ? rows.filter(FILTERS.find((f) => f.id === filter)!.test) : []), [rows, filter]);
-  const current = rows && selected ? rows[selected - 1] : null;
+  const examples = useMemo(() => (["C1", "C0", "EM"] as const)
+    .map((variant) => rows?.find((r) => r.detail && r.variant === variant))
+    .filter((r): r is Row => !!r), [rows]);
+  const selectedRow = selected ?? (manifest?.provenance.zeta === ORIGINAL ? 6710 : examples[0]?.row ?? rows?.[0]?.row ?? null);
+  const current = rows && selectedRow ? rows[selectedRow - 1] : null;
+  const upstream = manifest ? `${REPO}/tree/${manifest.provenance.zeta}` : REPO;
 
   return (
     <div className="zx">
       <a className="zx-skip" href="#intervals">Skip to the intervals</a>
       <header className="zx-head">
         <div className="zx-intro">
-          <p className="zx-kicker">The certificates in the Lean proof that the Riemann hypothesis holds up to height 10,011</p>
-          <h1>10,156 zero certificates, and how Lean checks them</h1>
+          {manifest && <p className="zx-kicker">Finite-height verification up to {fmt(Number(manifest.verified_height))}</p>}
+          <h1>{manifest ? `${fmt(manifest.rows)} zero certificates` : "Zero certificates"}, and how Lean checks them</h1>
           <p className="zx-lede">
-            Salvatore Mercuri and Bhavik Mehta’s <a href={REPO}>Lean proof</a> places a zero of ζ(½ + it) in each of 10,156 short intervals of t,
-            by showing that Hardy’s Z function changes sign across the interval. In Python each check is a few lines of arithmetic. Lean’s kernel
-            is slow at arithmetic, so the authors wrote a metaprogram that builds each certificate’s proof from lemmas whose side conditions
-            are comparisons between integers, which the kernel evaluates quickly. Every certificate is listed below with the numbers read from the compiled proof, and for
-            fourteen of them you can open the proof as a tree of the numbers it computes.
+            Salvatore Mercuri and Bhavik Mehta’s <a href={upstream}>Lean proof</a> certifies opposite signs of Hardy’s Z function
+            at the ends of each interval. The zero count gives one simple zero per interval and excludes other zeros in the counted range.
+            The explorer shows the bounds read from the compiled proofs{manifest?.detailed.length
+              ? ` and the computation for ${fmt(manifest.detailed.length)} selected certificates` : ""}.
           </p>
-          <nav className="zx-starts" aria-label="Places to start">
+          {examples.length > 0 && <nav className="zx-starts" aria-label="Places to start">
             <span className="zx-starts-h">Start with</span>
-            <a href="#/6710"><b>#6,710</b> near t = 7005, one of a pair that needed the C₁ term</a>
-            <a href="#/53"><b>#53</b> the first Riemann–Siegel certificate</a>
-            <a href="#/1"><b>#1</b> the first, computed with Euler–Maclaurin</a>
-          </nav>
+            {examples.map((r) => <a key={r.row} href={`#/${r.row}`}><b>#{fmt(r.row)}</b> {VARIANT_WORDS[r.variant]}</a>)}
+          </nav>}
         </div>
-        <div className="zx-overview">{rows && <MarginStrip rows={rows} selected={selected} onChoose={choose} height={250} />}</div>
+        <div className="zx-overview">{rows && <MarginStrip rows={rows} selected={selectedRow} onChoose={choose} height={250} />}</div>
       </header>
 
       {error && <p className="zx-error">Could not load the data: {error}</p>}
+      {manifest && <CatalogueDownloads manifest={manifest} />}
 
       <main className="zx-main" id="intervals">
         <section className="zx-table" aria-label="Certified intervals">
@@ -98,31 +136,33 @@ export function App() {
               </button>
             ))}
           </div>
-          {rows && <Table rows={shown} selected={selected} onChoose={choose} />}
+          {rows && <Table rows={shown} selected={selectedRow} onChoose={choose} />}
         </section>
 
         <section className="zx-detail" aria-label="The selected interval">
-          {current && rows ? <Detail key={current.row} rows={rows} manifest={manifest} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} /> : <p className="zx-loading">Loading the certificates…</p>}
+          {current && rows ? <Detail key={current.row} rows={rows} manifest={manifest} row={current} previous={rows[current.row - 2]} next={rows[current.row]} onChoose={choose} />
+            : rows ? <p className="zx-loading">This catalogue has no certificate #{selected}. <a href="#/1">Open certificate #1</a>.</p>
+            : !error && <p className="zx-loading">Loading the certificates…</p>}
           <footer className="zx-foot">
             <div>
               <h3>The proof</h3>
               <p>
-                Salvatore Mercuri and Bhavik Mehta’s, with its Lean and its data (<a href={REPO}>smmercuri/zeta</a>, Apache-2.0), built here at
-                commit {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} with {manifest?.provenance.toolchain ?? "Lean"}.
+                Salvatore Mercuri and Bhavik Mehta’s <a href={upstream}>Lean development and data</a>, Apache-2.0.
+                The extraction used revision {manifest?.provenance.zeta?.slice(0, 10) ?? "…"} and {manifest?.provenance.toolchain ?? "Lean"}.
               </p>
             </div>
             <div>
               <h3>The numbers</h3>
               <p>
-                A program read every number on this page from the compiled proof and rounded it outward, so no interval is printed narrower and
-                no margin larger than the proof gives.
+                The endpoints are exact decimal rationals. The extractor rounds the Hardy Z enclosures outward and the sign margins down.
               </p>
             </div>
             <div>
-              <h3>This page</h3>
+              <h3>Related work</h3>
               <p>
-                Will Cook made the program and this page with AI, and the authors have not reviewed either.{" "}
-                <a href="https://github.com/wcook04/zeta-certificate-explorer">How it was made</a>.
+                Will Cook made the extractor and explorer with AI assistance.{" "}
+                <a href="https://github.com/wcook04/zeta-certificate-explorer">Explorer source</a>.
+                {" "}<a href={`${EVIDENCE}/declarations.md`}>Lean declarations</a> and <a href={`${EVIDENCE}/verification.md`}>Comparator records</a> for the follow-up research.
               </p>
             </div>
           </footer>
@@ -210,6 +250,7 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
   const [treeError, setTreeError] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [comparison, setComparison] = useState<0 | 1 | null>(null);
+  const original = manifest?.provenance.zeta === ORIGINAL;
   const neighbours = [previous?.right === row.left ? previous : undefined, next?.left === row.right ? next : undefined] as const;
   useEffect(() => {
     setTree(null);
@@ -304,6 +345,10 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
             <span className={row.ends[1].sign === "+" ? "zx-pos" : "zx-neg"}>{sign(row.ends[1])}</span> at the right, after allowing for the
             rounding in the computation and for the error of the approximation. Z is continuous, so it is zero somewhere in between.
           </p>
+          <p className="zx-cert-links">
+            <a href={`#/${row.row}`}>Link to certificate #{fmt(row.row)}</a>
+            {manifest && <a href={batchSource(manifest.provenance.zeta, row)}>Lean batch source</a>}
+          </p>
         </div>
         <dl className="zx-verdict">
           {row.ends.map((e, i) => (
@@ -324,15 +369,15 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
           In Python the two checks at the end of this page take a few lines and a fraction of a second. Lean’s kernel is slow at arithmetic,
           and the sums get longer with height, so the metaprogram builds the proof from lemmas whose side conditions are comparisons between
           integers, which the kernel evaluates quickly.
-          {row.detail ? " Below are four techniques from the metaprogram’s source, how many times each is used in this certificate’s proof, and one place it is used, which you can open in the tree." : null}
+          {row.detail && original ? " Below are four techniques from the metaprogram’s source, how many times each is used in this certificate’s proof, and one place it is used, which you can open in the tree." : null}
         </p>
         </div>
-        {manifest?.sizes && <SizeChart sizes={manifest.sizes} row={row.row} />}
+        {manifest && manifest.sizes.length > 0 && <SizeChart sizes={manifest.sizes} row={row.row} />}
         </div>
         {row.detail ? (
           graph && tree ? (
             <div className="zx-bench">
-              <Metaprogram tree={tree} onShow={showExample} />
+              {original && <Metaprogram tree={tree} onShow={showExample} />}
               <div className="zx-bench-graph">
                 <style>{sealedCss}</style>
                 <div className="zx-map" ref={mapBox} onPointerMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPointer([e.clientX - r.left, e.clientY - r.top]); }} onPointerLeave={() => setHover(null)}>
@@ -380,12 +425,8 @@ function Detail({ rows, manifest, row, previous, next, onChoose }: { rows: Row[]
         ) : (
           <div className="zx-nodetail">
             <p>
-              A proof tree has been made for fourteen certificates so far, and #{fmt(row.row)} is not one of them. The numbers in the two
-              checks below are still read from this certificate in the compiled proof.
-            </p>
-            <p>
-              Open <a href="#/6710">#6,710</a> (Riemann–Siegel with C₁), <a href="#/53">#53</a> (Riemann–Siegel) or <a href="#/1">#1</a>{" "}
-              (Euler–Maclaurin), or list all fourteen with the “With proof tree” filter.
+              The two checks below come from the compiled proof.{" "}
+              {manifest?.detailed.length ? "Use the “With proof tree” filter to find certificates with a saved computation." : "This release contains the interval summaries."}
             </p>
           </div>
         )}
@@ -510,7 +551,7 @@ function Variant({ row }: { row: Row }) {
   return (
     <p className="zx-variant">
       {row.variant === "C1"
-        ? "The certificate builder first tries the Riemann–Siegel formula without the C₁ term, and this certificate uses the formula with it. Only 74 of the 10,104 Riemann–Siegel certificates use C₁, always in neighbouring pairs that share an endpoint. "
+        ? "This certificate uses the first Riemann–Siegel correction term C₁. "
         : "Riemann–Siegel formula without the C₁ term, which the certificate builder tries first. "}
       {sameBound
         ? <>Both endpoints use one error bound, proved at t = {row.ends[0].boundAt}, the lowest height in its batch of certificates. The bound decreases with t, so it holds at both endpoints.</>

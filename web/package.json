@@ -6,7 +6,10 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
+    "prepare-data": "python3 -B ../tools/export_downloads.py public/data public/downloads",
+    "predev": "npm run prepare-data",
     "dev": "vite",
+    "prebuild": "npm run prepare-data",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

@@ -79,6 +79,7 @@ export interface CertTree {
 
 export interface Manifest {
   rows: number;
+  verified_height: string;
   detailed: number[];
   variants: Record<string, number>;
   margins_checked: number;
