@@ -1,52 +1,57 @@
-# Zero certificates up to height 10,011
+# Zeta certificate explorer
 
-**[Open the site](https://wcook04.github.io/zeta-certificate-explorer/)**
+Browse the 10,156 zero intervals in Salvatore Mercuri and Bhavik Mehta’s
+[Lean verification up to height 10,011](https://github.com/smmercuri/zeta/tree/34037d5a7662e2eb6e970bfb22299c84e45ed5d9).
+Each interval has certified opposite signs of Hardy’s Z function at its endpoints.
+The upstream zero count gives one simple zero per interval and accounts for
+all zeros in the counted range.
 
-Salvatore Mercuri and Bhavik Mehta's [Lean verification of the Riemann hypothesis](https://github.com/smmercuri/zeta)
-proves that every nontrivial zero of the Riemann zeta function with |Im(s)| < 10,011 lies on the
-critical line. It rests on 10,156 intervals of height, each certified to contain a zero of
-Hardy's Z function, and on Turing's method to show there are no other zeros.
+[Open the explorer](https://wcook04.github.io/zeta-certificate-explorer/) ·
+[Catalogue files](#download-the-original-catalogue) ·
+[Working paper](#working-paper) ·
+[Build and host](#build-and-host)
 
-This site lists every one of those intervals. For each it shows, read from the compiled proof:
+## Explore the certificates
 
-- the interval each end's approximation Z̃ is proved to lie in, and its sign;
-- the proved bound on the approximation's error, and the height where that bound was proved;
-- the resulting enclosure for true Z, and its minimum distance from zero;
-- which formula the certificate uses: Euler–Maclaurin below t = 149.5, Riemann–Siegel above it,
-  and for 74 intervals Riemann–Siegel with its first correction term C₁.
+[Certificate 2391](https://wcook04.github.io/zeta-certificate-explorer/#/2391)
+shows the exact interval, both endpoint signs, the approximation and error
+bounds, and the margins by which the signs are certified. You can compare
+the two certificates that meet at a shared endpoint.
 
-Each endpoint can also be compared with the certificate for the neighbouring interval that meets
-it. This is useful when two certificates use different approximation formulas at the same height.
+[Certificate 53](https://wcook04.github.io/zeta-certificate-explorer/#/53) is
+the first Riemann–Siegel example with a proof tree. Open a quantity to see
+the Lean lemma that bounds it and the quantities used in that bound. The
+explorer includes fourteen such trees.
 
-For fourteen intervals it also opens the computation Lean checked, as a graph of the quantities
-the certificate encloses. Each card is one quantity and the interval it is proved to lie in; a
-card unfolds into the quantities it is built from. The panel gives the lemma that
-produced the value and the arithmetic obligations present at that step. Buttons jump directly to
-the left approximation, right approximation or error bound. The graph describes the successful
-proof dependencies; it does not claim to replay the construction history or measure kernel work.
-
-The verification, its Lean and its data are the authors'. The extraction, this site and its
-plain-language labels were made by Will Cook with AI and have not been reviewed by the authors.
+The Lean verification and original catalogue are Mercuri and Mehta’s work.
+Will Cook built the extractor and explorer with AI assistance.
 
 ## Download the original catalogue
 
-The explorer ships 10,156 inherited certificate intervals at upstream revision
-[34037d5a76](https://github.com/smmercuri/zeta/tree/34037d5a7662e2eb6e970bfb22299c84e45ed5d9).
-In a current build, **Download the catalogue** offers:
+These GitHub file pages are pinned to the explorer release. The catalogue
+comes from Mercuri and Mehta’s [upstream revision 34037d5a76](https://github.com/smmercuri/zeta/tree/34037d5a7662e2eb6e970bfb22299c84e45ed5d9).
 
 | File | Contents |
 | --- | --- |
-| Zero intervals CSV | Catalogue index and exact lower and upper endpoints |
-| Full certificates CSV | The interval, approximation variant, endpoint signs, enclosures, error bounds, margins and Lean batch coordinates |
-| Full JSON dataset | Structured catalogue read by the explorer |
-| Certificate evidence ZIP | All three formats, preparation provenance, column definitions, licence and SHA-256 checksums |
+| [Zero intervals CSV](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/zero-intervals.csv) | Catalogue index and exact lower and upper endpoints |
+| [Full certificates CSV](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/certificates.csv) | Approximation method, endpoint signs, enclosures, error bounds, sign margins and Lean batch coordinates |
+| [Full JSON catalogue](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/catalogue.json) | The structured certificate records used by the explorer |
+| [Certificate evidence ZIP](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/certificate-evidence.zip) | Both CSVs, JSON, provenance, licence and SHA-256 checksums |
 
-Treat the endpoints as decimal strings or rational numbers to preserve them
-exactly. The sign enclosures and margins are directed decimal bounds derived
-from the compiled proofs. The catalogue contains Mercuri and Mehta’s original
-intervals. The later grid comparisons and Lehmer-pair results are documented
-in the [separate Lean evidence](https://github.com/wcook04/zeta-proof-evidence/blob/b549e6615098ea13db0d746c6cc34198161e00fe/declarations.md)
-and [Comparator records](https://github.com/wcook04/zeta-proof-evidence/blob/b549e6615098ea13db0d746c6cc34198161e00fe/verification.md).
+Read the endpoints as decimal strings or rational numbers to retain their
+exact values. The other decimal bounds use directed rounding. See the
+[column definitions and provenance](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/README.txt)
+and the [release manifest](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/manifest.json) for details.
+
+## Working paper
+
+[*Shared Riemann–Siegel bounds and a Lehmer pair from seven values*](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/papers/riemann-siegel-lehmer-pair-20261124.pdf)
+is an AI-written working draft by Will Cook. It presents the smaller
+Riemann–Siegel coefficient bound and five grid changes, and the seven-value
+certificate for zeros 2391 and 2392. The supporting
+[Lean declarations](https://github.com/wcook04/zeta-proof-evidence/blob/b549e6615098ea13db0d746c6cc34198161e00fe/declarations.md)
+and [Comparator records](https://github.com/wcook04/zeta-proof-evidence/blob/b549e6615098ea13db0d746c6cc34198161e00fe/verification.md)
+are pinned separately from the original catalogue.
 
 ## How the data is made
 
@@ -79,6 +84,10 @@ and [Comparator records](https://github.com/wcook04/zeta-proof-evidence/blob/b54
    Proof Reader at commit `88f7724`, which copied it from lean-exposition).
 
 ## Build and host
+
+The [source code](web/) and the [published static files](https://github.com/wcook04/zeta-certificate-explorer/tree/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e)
+are both on GitHub. You can serve the published files as they are, or build
+from source using the commands below.
 
 Use Python 3.10 or later and Node.js 20.19+, 22.12+ or a later supported release.
 The lockfile pins the web dependencies.
