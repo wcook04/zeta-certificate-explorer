@@ -1,0 +1,146 @@
+{
+  "rows": 10156,
+  "detailed": [
+    1,
+    2,
+    3,
+    52,
+    53,
+    54,
+    55,
+    252,
+    253,
+    6709,
+    6710,
+    7336,
+    10155,
+    10156
+  ],
+  "variants": {
+    "EM": 52,
+    "C0": 10030,
+    "C1": 74
+  },
+  "margins_checked": 20312,
+  "provenance": {
+    "run_id": "44762446053",
+    "self_sha": "88f7724a4f402084b47849111425120b43031072",
+    "zeta": "34037d5a7662e2eb6e970bfb22299c84e45ed5d9",
+    "toolchain": "leanprover/lean4:v4.35.0"
+  },
+  "sizes": [
+    {
+      "row": 1,
+      "method": "EM",
+      "t": "1.000",
+      "steps": 21565,
+      "kernelChecks": 10657,
+      "sealed": 191
+    },
+    {
+      "row": 2,
+      "method": "EM",
+      "t": "17.846",
+      "steps": 22100,
+      "kernelChecks": 10986,
+      "sealed": 192
+    },
+    {
+      "row": 3,
+      "method": "EM",
+      "t": "23.170",
+      "steps": 22318,
+      "kernelChecks": 11110,
+      "sealed": 192
+    },
+    {
+      "row": 52,
+      "method": "EM",
+      "t": "146.530",
+      "steps": 24738,
+      "kernelChecks": 12058,
+      "sealed": 198
+    },
+    {
+      "row": 53,
+      "method": "RS",
+      "t": "149.500",
+      "steps": 727,
+      "kernelChecks": 410,
+      "sealed": 20
+    },
+    {
+      "row": 54,
+      "method": "RS",
+      "t": "150.503",
+      "steps": 741,
+      "kernelChecks": 420,
+      "sealed": 20
+    },
+    {
+      "row": 55,
+      "method": "RS",
+      "t": "152.477",
+      "steps": 744,
+      "kernelChecks": 424,
+      "sealed": 20
+    },
+    {
+      "row": 252,
+      "method": "RS",
+      "t": "473.149",
+      "steps": 1019,
+      "kernelChecks": 591,
+      "sealed": 36
+    },
+    {
+      "row": 253,
+      "method": "RS",
+      "t": "474.603",
+      "steps": 1009,
+      "kernelChecks": 584,
+      "sealed": 36
+    },
+    {
+      "row": 6709,
+      "method": "RS",
+      "t": "7004.726",
+      "steps": 2839,
+      "kernelChecks": 1628,
+      "sealed": 142
+    },
+    {
+      "row": 6710,
+      "method": "RS",
+      "t": "7005.076",
+      "steps": 2850,
+      "kernelChecks": 1630,
+      "sealed": 142
+    },
+    {
+      "row": 7336,
+      "method": "RS",
+      "t": "7563.330",
+      "steps": 2487,
+      "kernelChecks": 1458,
+      "sealed": 140
+    },
+    {
+      "row": 10155,
+      "method": "RS",
+      "t": "10009.404",
+      "steps": 2765,
+      "kernelChecks": 1612,
+      "sealed": 160
+    },
+    {
+      "row": 10156,
+      "method": "RS",
+      "t": "10010.629",
+      "steps": 2735,
+      "kernelChecks": 1597,
+      "sealed": 160
+    }
+  ],
+  "verified_height": "10011"
+}
