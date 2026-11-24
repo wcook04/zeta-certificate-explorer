@@ -28,24 +28,24 @@ Will Cook built the extractor and explorer with AI assistance.
 
 ## Download the original catalogue
 
-These GitHub file pages are pinned to the explorer release. The catalogue
+The dataset directory records the upstream commit. The catalogue
 comes from Mercuri and Mehta’s [upstream revision 34037d5a76](https://github.com/smmercuri/zeta/tree/34037d5a7662e2eb6e970bfb22299c84e45ed5d9).
 
 | File | Contents |
 | --- | --- |
-| [Zero intervals CSV](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/zero-intervals.csv) | Catalogue index and exact lower and upper endpoints |
-| [Full certificates CSV](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/certificates.csv) | Approximation method, endpoint signs, enclosures, error bounds, sign margins and Lean batch coordinates |
-| [Full JSON catalogue](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/catalogue.json) | The structured certificate records used by the explorer |
-| [Certificate evidence ZIP](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/certificate-evidence.zip) | Both CSVs, JSON, provenance, licence and SHA-256 checksums |
+| [Zero intervals CSV](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/zero-intervals.csv) | Catalogue index and exact lower and upper endpoints |
+| [Full certificates CSV](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/certificates.csv) | Approximation method, endpoint signs, enclosures, error bounds, sign margins and Lean batch coordinates |
+| [Full JSON catalogue](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/catalogue.json) | The structured certificate records used by the explorer |
+| [Certificate evidence ZIP](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/certificate-evidence.zip) | Both CSVs, JSON, provenance, licence and SHA-256 checksums |
 
 Read the endpoints as decimal strings or rational numbers to retain their
 exact values. The other decimal bounds use directed rounding. See the
-[column definitions and provenance](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/README.txt)
-and the [release manifest](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/manifest.json) for details.
+[column definitions and provenance](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/README.txt)
+and the [release manifest](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/downloads/34037d5a7662e2eb6e970bfb22299c84e45ed5d9/manifest.json) for details.
 
 ## Working paper
 
-[*Shared Riemann–Siegel bounds and a Lehmer pair from seven values*](https://github.com/wcook04/zeta-certificate-explorer/blob/e1fa8dd005612b5be5d22bf7f2b9a61348a74844/papers/riemann-siegel-lehmer-pair-20261124.pdf)
+[*Shared Riemann–Siegel bounds and a Lehmer pair from seven values*](https://github.com/wcook04/zeta-certificate-explorer/blob/gh-pages/papers/riemann-siegel-lehmer-pair-20261124.pdf)
 is an AI-written working draft by Will Cook. It presents the smaller
 Riemann–Siegel coefficient bound and five grid changes, and the seven-value
 certificate for zeros 2391 and 2392. The supporting
@@ -85,7 +85,7 @@ are pinned separately from the original catalogue.
 
 ## Build and host
 
-The [source code](web/) and the [published static files](https://github.com/wcook04/zeta-certificate-explorer/tree/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e)
+The [source code](web/) and the [published static files](https://github.com/wcook04/zeta-certificate-explorer/tree/gh-pages)
 are both on GitHub. You can serve the published files as they are, or build
 from source using the commands below.
 
