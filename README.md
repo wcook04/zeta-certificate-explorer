@@ -45,7 +45,7 @@ and the [release manifest](https://github.com/wcook04/zeta-certificate-explorer/
 
 ## Working paper
 
-[*Shared Riemann–Siegel bounds and a Lehmer pair from seven values*](https://github.com/wcook04/zeta-certificate-explorer/blob/1b46132858d85b45c6d4f2bff61e7aa4cdffec0e/papers/riemann-siegel-lehmer-pair-20261124.pdf)
+[*Shared Riemann–Siegel bounds and a Lehmer pair from seven values*](https://github.com/wcook04/zeta-certificate-explorer/blob/e1fa8dd005612b5be5d22bf7f2b9a61348a74844/papers/riemann-siegel-lehmer-pair-20261124.pdf)
 is an AI-written working draft by Will Cook. It presents the smaller
 Riemann–Siegel coefficient bound and five grid changes, and the seven-value
 certificate for zeros 2391 and 2392. The supporting
