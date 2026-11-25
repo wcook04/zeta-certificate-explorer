@@ -134,9 +134,11 @@ export function layoutTree(input: LayoutInput): { layout: Layout; plan: Plan } {
     up.get(b)!.push({ id: a, w });
   };
   const chains = new Map<string, string[]>();
+  const firstEdgeByKey = new Map<string, EngineEdge>();
   const dummyEdge = new Map<string, string>();
   const dummyRank = new Map<string, number>();
   for (const e of edges) {
+    if (!firstEdgeByKey.has(e.key)) firstEdgeByKey.set(e.key, e);
     const a = rank.get(e.from)!;
     const b = rank.get(e.to)!;
     const chain: string[] = [];
@@ -274,7 +276,7 @@ export function layoutTree(input: LayoutInput): { layout: Layout; plan: Plan } {
     for (let pass = 0; pass < 2; pass++)
       for (const [key, chain] of chains) {
         if (!chain.length) continue;
-        const e = edges.find((x) => x.key === key)!;
+        const e = firstEdgeByKey.get(key)!;
         const xsNow = chain.map((d) => xs.get(d)!);
         if (Math.max(...xsNow) - Math.min(...xsNow) < 0.5 && Math.abs(xsNow[xsNow.length - 1] - xs.get(e.to)!) < 0.5) continue;
         // Prefer straight into the prerequisite, then into the consumer, then any of its own columns.
